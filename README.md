@@ -17,7 +17,24 @@ attachment, sending the PDF means saving it first and attaching it by hand.
 
 ## Stack
 
-React 19 · TypeScript (strict) · Vite · plain CSS · GitHub Actions → GitHub Pages
+React 19 · TypeScript (strict) · Vite · GitHub Actions → GitHub Pages
+
+## Theme and attribution
+
+The site is built on **[Massively](https://html5up.net/massively) by HTML5 UP**,
+used under **CC BY 3.0** — see `MASSIVELY-LICENSE.txt`. The licence requires a
+visible credit, which lives in the page footer as “Design: HTML5 UP”. **Removing
+that credit requires buying a licence from HTML5 UP** — don't delete it casually.
+
+The template is vendored unmodified in `public/assets/` and `public/images/`, and
+loaded by a plain `<link>` in `index.html` so its own relative URLs (fonts, the
+background photo) keep resolving. App-specific styling lives in `src/index.css`,
+which loads afterwards and only adds what the template has no equivalent for:
+stat tiles, progress and macro bars, the plan notice, and the print stylesheet.
+
+Its palette is the template's: ink `#212931`, muted `#717981`, accent `#18bfef`,
+hairline `#e2e2e2`. Note `#main` is white while everything outside it sits on the
+dark background photo — styling added there must be dark-on-light.
 
 ## Running locally
 

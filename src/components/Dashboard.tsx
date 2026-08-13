@@ -54,6 +54,34 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
     window.print();
   }
 
+  const tiles: Array<{ label: string; value: string; note: string }> = [
+    {
+      label: 'Daily calories',
+      value: plan.dailyCalories.toLocaleString(),
+      note: 'kcal per day',
+    },
+    {
+      label: plan.adjustment < 0 ? 'Deficit' : plan.adjustment > 0 ? 'Surplus' : 'Balance',
+      value: Math.abs(plan.adjustment).toLocaleString(),
+      note:
+        plan.adjustment < 0
+          ? 'kcal below maintenance'
+          : plan.adjustment > 0
+            ? 'kcal above maintenance'
+            : 'kcal at maintenance',
+    },
+    { label: 'Maintenance', value: plan.tdee.toLocaleString(), note: 'kcal to hold weight' },
+    { label: 'Resting burn', value: plan.bmr.toLocaleString(), note: 'kcal at complete rest' },
+    { label: 'Body mass index', value: String(plan.bmi), note: plan.bmiCategory },
+    {
+      label: 'Expected change',
+      value: `${plan.weeklyRateKg > 0 ? '+' : ''}${plan.weeklyRateKg}`,
+      note: 'kg per week',
+    },
+    { label: 'Water', value: (plan.waterMl / 1000).toFixed(1), note: 'litres per day' },
+    { label: 'Steps', value: plan.stepsTarget.toLocaleString(), note: 'outside your workouts' },
+  ];
+
   return (
     <>
       <div className="print-head">
@@ -63,220 +91,170 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
         </span>
       </div>
 
-      <section className="section hero">
-        <div className="hero-media">
-          {profile.photo ? <img src={profile.photo} alt="Your progress photo" /> : <span>No photo</span>}
-        </div>
-        <div className="hero-body">
-          <span className="eyebrow">{GOAL_LABELS[profile.goal]}</span>
-          <h1 className="hero-title">{profile.name ? `${profile.name}'s plan` : 'Your plan'}</h1>
-          <p className="hero-sub">
+      <article className="post featured plan-hero">
+        <header className="major">
+          <span className="date">{GOAL_LABELS[profile.goal]}</span>
+          <h2>{profile.name ? `${profile.name}'s plan` : 'Your plan'}</h2>
+          <p>
             {Math.abs(plan.weightDeltaKg)} kg {direction} · {profile.weightKg} kg today ·{' '}
             {clamped ? 'realistic finish ' : 'target '}
             {formatDate(clamped ? plan.projectedDate : plan.targetDate)}
           </p>
-          <div className="progress">
-            <div className="progress-bar" style={{ width: `${progressPct}%` }} />
+        </header>
+
+        {profile.photo && (
+          <span className="image main plan-photo">
+            <img src={profile.photo} alt="Your progress photo" />
+          </span>
+        )}
+
+        <div className="progress">
+          <div className="progress-bar" style={{ width: `${progressPct}%` }} />
+        </div>
+        <p className="progress-label">
+          <span>
+            Day {elapsed} of {profile.days}
+          </span>
+          <span>{plan.daysLeft} days left</span>
+        </p>
+
+        <div className={`notice notice-${plan.safety.level}`}>
+          <strong>{NOTICE_TITLES[plan.safety.level]}</strong>
+          <span>{plan.safety.message}</span>
+        </div>
+      </article>
+
+      <section className="posts stat-posts">
+        {tiles.map((tile) => (
+          <article key={tile.label} className="stat">
+            <span className="date">{tile.label}</span>
+            <strong className="stat-value">{tile.value}</strong>
+            <span className="stat-note">{tile.note}</span>
+          </article>
+        ))}
+      </section>
+
+      <article className="post">
+        <header>
+          <div className="title">
+            <h2>Macros</h2>
+            <p>
+              {plan.macros.proteinG}g protein · {plan.macros.carbsG}g carbs · {plan.macros.fatG}g fat
+            </p>
           </div>
-          <p className="progress-label">
-            <span>
-              Day {elapsed} of {profile.days}
-            </span>
-            <span>{plan.daysLeft} days left</span>
-          </p>
-        </div>
+        </header>
+        <Macro label="Protein" grams={plan.macros.proteinG} kcal={plan.macros.proteinG * 4} total={plan.dailyCalories} />
+        <Macro label="Carbs" grams={plan.macros.carbsG} kcal={plan.macros.carbsG * 4} total={plan.dailyCalories} />
+        <Macro label="Fat" grams={plan.macros.fatG} kcal={plan.macros.fatG * 9} total={plan.dailyCalories} />
+      </article>
+
+      <section className="posts">
+        <article>
+          <h3>Meal plan</h3>
+          <p className="muted">Built around your {profile.diet.replace('-', ' ')} preference.</p>
+          <ul className="rows">
+            {meals.map((meal) => (
+              <li key={meal.name}>
+                <div className="row-head">
+                  <strong>{meal.name}</strong>
+                  <span className="row-meta">{meal.time}</span>
+                  <span className="pill">{meal.calories} kcal</span>
+                </div>
+                <p>{meal.idea}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
+
+        <article>
+          <h3>Training week</h3>
+          <p className="muted">Repeat weekly, adding a little weight or distance each time.</p>
+          <ul className="rows">
+            {week.map((day) => (
+              <li key={day.day}>
+                <div className="row-head">
+                  <span className="day-tag">{day.day}</span>
+                  <strong>{day.focus}</strong>
+                </div>
+                <p>{day.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
       </section>
 
-      <div className={`notice notice-${plan.safety.level}`}>
-        <span className="eyebrow">{NOTICE_TITLES[plan.safety.level]}</span>
-        <p>{plan.safety.message}</p>
-      </div>
-
-      <section className="section">
-        <div className="section-head">
-          <h2 className="section-title">Daily targets</h2>
-          <p className="section-note">Recalculated whenever you edit your details</p>
-        </div>
-        <div className="rule" />
-        <div className="grid-4">
-          <article className="card tile tile-feature">
-            <span className="badge tile-badge">Eat this</span>
-            <span className="tile-label">Daily calories</span>
-            <strong className="tile-value">{plan.dailyCalories.toLocaleString()}</strong>
-            <span className="tile-note">kcal per day</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">
-              {plan.adjustment < 0 ? 'Deficit' : plan.adjustment > 0 ? 'Surplus' : 'Balance'}
-            </span>
-            <strong className="tile-value">{Math.abs(plan.adjustment).toLocaleString()}</strong>
-            <span className="tile-note">
-              {plan.adjustment < 0
-                ? 'kcal below maintenance'
-                : plan.adjustment > 0
-                  ? 'kcal above maintenance'
-                  : 'kcal at maintenance'}
-            </span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Maintenance</span>
-            <strong className="tile-value">{plan.tdee.toLocaleString()}</strong>
-            <span className="tile-note">kcal to hold weight</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Resting burn</span>
-            <strong className="tile-value">{plan.bmr.toLocaleString()}</strong>
-            <span className="tile-note">kcal at complete rest</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Body mass index</span>
-            <strong className="tile-value">{plan.bmi}</strong>
-            <span className="tile-note">{plan.bmiCategory}</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Expected change</span>
-            <strong className="tile-value">
-              {plan.weeklyRateKg > 0 ? '+' : ''}
-              {plan.weeklyRateKg}
-            </strong>
-            <span className="tile-note">kg per week</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Water</span>
-            <strong className="tile-value">{(plan.waterMl / 1000).toFixed(1)}</strong>
-            <span className="tile-note">litres per day</span>
-          </article>
-          <article className="card tile">
-            <span className="tile-label">Steps</span>
-            <strong className="tile-value">{plan.stepsTarget.toLocaleString()}</strong>
-            <span className="tile-note">outside your workouts</span>
-          </article>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head">
-          <h2 className="section-title">Macros</h2>
-          <p className="section-note">
-            {plan.macros.proteinG}P · {plan.macros.carbsG}C · {plan.macros.fatG}F grams
-          </p>
-        </div>
-        <div className="rule" />
-        <div className="card">
-          <Macro label="Protein" grams={plan.macros.proteinG} kcal={plan.macros.proteinG * 4} total={plan.dailyCalories} />
-          <Macro label="Carbs" grams={plan.macros.carbsG} kcal={plan.macros.carbsG * 4} total={plan.dailyCalories} />
-          <Macro label="Fat" grams={plan.macros.fatG} kcal={plan.macros.fatG * 9} total={plan.dailyCalories} />
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head">
-          <h2 className="section-title">Your week</h2>
-          <p className="section-note">{profile.diet.replace('-', ' ')} meals · {GOAL_LABELS[profile.goal].toLowerCase()} training</p>
-        </div>
-        <div className="rule" />
-        <div className="grid-2">
-          <div className="card">
-            <span className="eyebrow">Meal plan</span>
-            <ul className="rows">
-              {meals.map((meal) => (
-                <li key={meal.name}>
-                  <div className="row-head">
-                    <strong>{meal.name}</strong>
-                    <span className="row-meta">{meal.time}</span>
-                    <span className="badge">{meal.calories} kcal</span>
-                  </div>
-                  <p>{meal.idea}</p>
-                </li>
-              ))}
-            </ul>
+      <article className="post">
+        <header>
+          <div className="title">
+            <h2>Checkpoints</h2>
+            <p>Weigh in once a week, same time of day.</p>
           </div>
-
-          <div className="card">
-            <span className="eyebrow">Training split</span>
-            <ul className="rows">
-              {week.map((day) => (
-                <li key={day.day}>
-                  <div className="row-head">
-                    <span className="day-tag">{day.day}</span>
-                    <strong>{day.focus}</strong>
-                  </div>
-                  <p>{day.detail}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-head">
-          <h2 className="section-title">Checkpoints</h2>
-          <p className="section-note">Weigh in once a week, same time of day</p>
-        </div>
-        <div className="rule" />
-        <div className="card">
-          <table className="table">
+        </header>
+        <div className="table-wrapper">
+          <table className="alt">
             <thead>
               <tr>
-                <th scope="col">Week</th>
-                <th scope="col">Target weight</th>
-                <th scope="col">Date</th>
+                <th>Week</th>
+                <th>Target weight</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
               {plan.milestones.map((m) => (
                 <tr key={m.week}>
                   <td>{m.week}</td>
-                  <td className="num">{m.targetWeightKg} kg</td>
+                  <td>{m.targetWeightKg} kg</td>
                   <td>{formatDate(m.date)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </article>
 
-      <section className="section">
-        <div className="section-head">
-          <h2 className="section-title">Habits</h2>
-          <p className="section-note">The part that decides the outcome</p>
-        </div>
-        <div className="rule" />
-        <div className="grid-3">
+      <article className="post">
+        <header>
+          <div className="title">
+            <h2>Habits</h2>
+            <p>The part that decides the outcome.</p>
+          </div>
+        </header>
+        <ul className="habits">
           {notes.map((note, i) => (
-            <article className="card habit" key={note}>
-              <span className="eyebrow">{String(i + 1).padStart(2, '0')}</span>
-              <p>{note}</p>
-            </article>
+            <li key={note}>
+              <span className="habit-index">{String(i + 1).padStart(2, '0')}</span>
+              <span>{note}</span>
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
 
-      <div className="form-actions plan-actions">
-        <button className="btn btn-primary" onClick={handlePrint}>
-          Save as PDF
-        </button>
-        <a className="btn" href={mailtoHref}>
-          Email my plan
-        </a>
-        <button className="btn" onClick={onEdit}>
-          Edit details
-        </button>
-        <button className="btn btn-quiet" onClick={onReset}>
-          Start over
-        </button>
-      </div>
-      <p className="hint plan-actions-hint">
-        “Save as PDF” opens your browser’s print dialog — choose <em>Save as PDF</em> as the destination. “Email my
-        plan” opens your mail app with the plan written into the message; nothing is sent from this page.
-      </p>
-
-      <p className="disclaimer">
-        Numbers come from standard estimates — Mifflin-St Jeor for metabolic rate and 7,700 kcal per kilogram of body
-        mass. They are a starting point, not medical advice. Check with a doctor before a big change, especially with a
-        health condition.
-      </p>
+        <ul className="actions plan-actions">
+          <li>
+            <button className="button primary icon solid fa-file-pdf" onClick={handlePrint}>
+              Save as PDF
+            </button>
+          </li>
+          <li>
+            <a className="button icon solid fa-envelope" href={mailtoHref}>
+              Email my plan
+            </a>
+          </li>
+          <li>
+            <button className="button" onClick={onEdit}>
+              Edit details
+            </button>
+          </li>
+          <li>
+            <button className="button" onClick={onReset}>
+              Start over
+            </button>
+          </li>
+        </ul>
+        <p className="hint plan-actions-hint">
+          “Save as PDF” opens your browser’s print dialog — choose <em>Save as PDF</em> as the destination. “Email my
+          plan” opens your mail app with the plan written into the message; nothing is sent from this page.
+        </p>
+      </article>
     </>
   );
 }
