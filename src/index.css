@@ -14,10 +14,11 @@
   --muted: #767676;
   --line: #e3e3e3;
   --line-soft: #efece8;
-  --page: #ffffff;
+  /* Page sits a shade below the cards so white surfaces lift off it. */
+  --page: #f2ede7;
   --surface: #ffffff;
-  --cream: #f9f5f1;
-  --cream-2: #f3ece4;
+  --cream: #eae3da;
+  --cream-2: #ded4c6;
 
   --navy: #132a6b;
   --navy-2: #27455c;
@@ -355,7 +356,7 @@ img {
   padding: 0 0 72px;
   color: #fff;
   background:
-    linear-gradient(90deg, rgba(20, 22, 24, 0.72) 0%, rgba(20, 22, 24, 0.35) 45%, rgba(20, 22, 24, 0.08) 100%),
+    linear-gradient(90deg, rgba(18, 20, 22, 0.86) 0%, rgba(18, 20, 22, 0.58) 45%, rgba(18, 20, 22, 0.3) 100%),
     url('/images/hero.jpg') center 32% / cover no-repeat,
     var(--ink);
 }
@@ -1681,7 +1682,7 @@ input[aria-invalid='true'] {
 .band {
   position: relative;
   padding: 84px 0;
-  background: var(--surface);
+  background: var(--page);
   color: var(--body);
   text-align: center;
 }
@@ -1771,13 +1772,24 @@ input[aria-invalid='true'] {
   font-variant-numeric: tabular-nums;
 }
 
-.figure span {
+/* Direct child only — the counter renders its own <span> inside <strong>, and
+   the caption styling was landing on the number itself. */
+.figure > span {
   display: block;
   margin-top: 10px;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.figure strong span {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  color: inherit;
 }
 
 .goto-next { display: none; }
