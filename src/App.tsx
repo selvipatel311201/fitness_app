@@ -4,6 +4,7 @@ import { ProfileForm } from './components/ProfileForm';
 import { Dashboard } from './components/Dashboard';
 import { Fitty } from './components/Fitty';
 import { Icon, Logo } from './components/Chrome';
+import { Counter, Reveal } from './components/Reveal';
 import { clearProfile, loadProfile, saveProfile } from './lib/storage';
 import { draftFromProfile, emptyDraft } from './lib/validate';
 
@@ -94,58 +95,167 @@ export default function App() {
                   </li>
                 </ul>
               </div>
+              <a className="goto-next" href="#what" aria-label="See what you get">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </a>
             </section>
 
-            <div className="shell">
-              <div className="hero-cards">
-                <article className="hero-card">
-                  <span className="hero-card-icon">
-                    <Icon name="flame" size={18} />
-                  </span>
-                  <strong>Calories &amp; macros</strong>
-                  <span>Worked out from your body and your goal, not a guess.</span>
-                </article>
-                <article className="hero-card">
-                  <span className="hero-card-icon">
-                    <Icon name="plate" size={18} />
-                  </span>
-                  <strong>Meals you'll eat</strong>
-                  <span>Four a day, matched to how you eat and what you avoid.</span>
-                </article>
-                <article className="hero-card">
-                  <span className="hero-card-icon">
-                    <Icon name="calendar" size={18} />
-                  </span>
-                  <strong>A week of training</strong>
-                  <span>Scaled to the days you can realistically train.</span>
-                </article>
-              </div>
-            </div>
-
-            <section className="section">
+            <section className="band" id="what">
               <div className="shell">
-                <div className="section-head">
-                  <span className="eyebrow">How it works</span>
-                  <h2>Three steps, then you just follow it</h2>
-                  <p className="lede">No subscriptions, no logins, no data collection. It runs entirely in your browser.</p>
-                </div>
+                <Reveal>
+                  <div className="band-head">
+                    <span className="eyebrow">What you get</span>
+                    <h2>Everything a coach would write down for you</h2>
+                    <p className="lede">
+                      Not a generic PDF off the internet. Every number below is worked out from your body, your goal and
+                      the days you can actually train.
+                    </p>
+                  </div>
+                </Reveal>
+
+                <ul className="icons-grid">
+                  {[
+                    {
+                      icon: 'flame',
+                      title: 'Calories and macros',
+                      body: 'A daily target from the Mifflin-St Jeor formula, split into protein, carbs and fat in grams.',
+                    },
+                    {
+                      icon: 'plate',
+                      title: 'Meals you will actually eat',
+                      body: 'Four a day matched to how you eat — vegetarian, vegan, eggetarian or not — minus anything you avoid.',
+                    },
+                    {
+                      icon: 'calendar',
+                      title: 'A training week',
+                      body: 'Seven days planned around your goal and trimmed to the number of days you can realistically train.',
+                    },
+                    {
+                      icon: 'check',
+                      title: 'Dated checkpoints',
+                      body: 'A target weight for every week, so you know on any given Sunday whether you are on pace.',
+                    },
+                    {
+                      icon: 'chat',
+                      title: 'Fitty, your coach',
+                      body: 'Ask for any body part and get the movement explained in plain steps, with videos to watch.',
+                    },
+                    {
+                      icon: 'shield',
+                      title: 'Safe by design',
+                      body: 'The pace is capped at what a body can do, and nothing you type ever leaves this device.',
+                    },
+                  ].map((item, i) => (
+                    <Reveal as="li" key={item.title} delay={i * 70}>
+                      <span className="icon-badge">
+                        <Icon name={item.icon} size={20} />
+                      </span>
+                      <h3>{item.title}</h3>
+                      <p>{item.body}</p>
+                    </Reveal>
+                  ))}
+                </ul>
+
+                <ul className="figures">
+                  <li className="figure">
+                    <strong>
+                      <Counter to={2} />&nbsp;min
+                    </strong>
+                    <span>to a finished plan</span>
+                  </li>
+                  <li className="figure">
+                    <strong>
+                      <Counter to={12} />
+                    </strong>
+                    <span>movements explained step by step</span>
+                  </li>
+                  <li className="figure">
+                    <strong>
+                      <Counter to={0} />
+                    </strong>
+                    <span>bytes of your data sent anywhere</span>
+                  </li>
+                </ul>
+              </div>
+              <a className="goto-next" href="#how" aria-label="See how it works">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </a>
+            </section>
+
+            <section className="band band-page" id="how">
+              <div className="shell">
+                <Reveal>
+                  <div className="band-head">
+                    <span className="eyebrow">How it works</span>
+                    <h2>Three steps, then you just follow it</h2>
+                    <p className="lede">No subscriptions, no logins, no data collection. It runs entirely in your browser.</p>
+                  </div>
+                </Reveal>
                 <ol className="steps">
-                  <li className="step">
-                    <span className="step-num">1</span>
-                    <h3>Tell it about you</h3>
-                    <p>Age, height, weight, target, how you eat and how often you train. Or just chat it through with Fitty.</p>
-                  </li>
-                  <li className="step">
-                    <span className="step-num">2</span>
-                    <h3>Get real numbers</h3>
-                    <p>A calorie target and macro split from proven formulas — capped at a pace that is actually safe.</p>
-                  </li>
-                  <li className="step">
-                    <span className="step-num">3</span>
-                    <h3>Follow the week</h3>
-                    <p>Meals, training and weekly weigh-in checkpoints. Save it as a PDF or email it to yourself.</p>
-                  </li>
+                  {[
+                    ['Tell it about you', 'Age, height, weight, target, how you eat and how often you train. Or chat it through with Fitty.'],
+                    ['Get real numbers', 'A calorie target and macro split from proven formulas — capped at a pace that is actually safe.'],
+                    ['Follow the week', 'Meals, training and weekly weigh-in checkpoints. Save it as a PDF or email it to yourself.'],
+                  ].map(([title, body], i) => (
+                    <Reveal as="li" key={title} delay={i * 90}>
+                      <div className="step">
+                        <span className="step-num">{i + 1}</span>
+                        <h3>{title}</h3>
+                        <p>{body}</p>
+                      </div>
+                    </Reveal>
+                  ))}
                 </ol>
+              </div>
+            </section>
+
+            <section className="band band-light" id="faq">
+              <div className="shell">
+                <Reveal>
+                  <div className="band-head">
+                    <span className="eyebrow">Questions</span>
+                    <h2>The things people ask first</h2>
+                  </div>
+                </Reveal>
+                <Reveal>
+                  <div className="faq">
+                    {[
+                      ['Is my data really private?', 'Yes. There is no account and no server. Your details, photo and plan live in this browser only — clearing site data deletes them, and nothing is ever uploaded.'],
+                      ['Where do the numbers come from?', 'Mifflin-St Jeor for resting metabolic rate, an activity multiplier for maintenance, and 7,700 kcal per kilogram of body mass for the deficit or surplus. Protein is 1.6–2.0 g/kg depending on your goal.'],
+                      ['What if I ask for something unrealistic?', 'It tells you. The pace is capped at about 1% of bodyweight lost per week and never drops below 1,500 kcal for men or 1,200 for women — if your timeline needs more, it plans the fastest healthy version and says so.'],
+                      ['Can I get the plan out of the browser?', 'Save as PDF uses your browser’s own print-to-PDF, so the text stays selectable. Email my plan opens your mail app with everything written in.'],
+                      ['Is this medical advice?', 'No. These are estimates from population formulas. If you have a health condition, are pregnant, or are recovering from injury, talk to a doctor before making a big change.'],
+                    ].map(([q, a]) => (
+                      <details key={q}>
+                        <summary>{q}</summary>
+                        <p>{a}</p>
+                      </details>
+                    ))}
+                  </div>
+                </Reveal>
+              </div>
+            </section>
+
+            <section className="band cta-band">
+              <div className="shell">
+                <Reveal>
+                  <div className="band-head" style={{ marginBottom: 0 }}>
+                    <h2>Ready when you are</h2>
+                    <p className="lede">Two minutes of typing and you will have the whole thing — meals, training and all.</p>
+                  </div>
+                  <div className="cta-actions">
+                    <a className="btn btn-primary" href="#form">
+                      Build my plan <Icon name="bolt" size={16} />
+                    </a>
+                    <button className="btn btn-ghost" onClick={() => window.dispatchEvent(new Event('fitty:open'))}>
+                      <Icon name="chat" size={16} /> Ask Fitty a question
+                    </button>
+                  </div>
+                </Reveal>
               </div>
             </section>
           </>
@@ -174,7 +284,12 @@ export default function App() {
       <footer className="site-footer">
         <div className="shell footer-inner">
           <span>© FitPlan · Estimates from standard formulas, not medical advice.</span>
-          <span>Built with React &amp; TypeScript · Your data stays in this browser</span>
+          <span className="footer-credit">
+            Built with React &amp; TypeScript · Design inspired by{' '}
+            <a href="https://html5up.net" target="_blank" rel="noreferrer noopener">
+              HTML5 UP
+            </a>
+          </span>
         </div>
       </footer>
 

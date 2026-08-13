@@ -21,8 +21,17 @@ React 19 · TypeScript (strict) · Vite · GitHub Actions → GitHub Pages
 
 ## Design
 
-Custom design system — no template, nothing to attribute. Space Grotesk for
-headings and numbers, Inter for body text (both from Google Fonts). Near-black
+Layout follows **[Highlights](https://html5up.net/highlights) by HTML5 UP**
+(CC BY 3.0): full-width slate bands, centred headings over a short accent rule,
+an icon grid and a scroll cue between sections. Its design language is
+reimplemented in `src/index.css` rather than vendored — dropping a template's
+raw CSS into this app previously meant its global `button` and `justify` rules
+fought every component. The credit in the footer stays either way.
+
+Modern additions on top: reveal-on-scroll (IntersectionObserver, disabled under
+`prefers-reduced-motion`), counting figures, an FAQ accordion, gradient icon
+badges and a closing call-to-action band. Raleway for headings
+(the template's face), Inter for body text — both from Google Fonts. Near-black
 ink on off-white, with one hot accent (`#ff4a1c`) reserved for actions and the
 single most important number on the page; macro colours are the only other hues.
 Tokens live at the top of `src/index.css`.
