@@ -260,108 +260,140 @@ img {
 
 /* --- hero ----------------------------------------------------------------- */
 
-/* Full-bleed photo banner. The image sits behind a heavy gradient, so its
-   resolution never has to carry fine detail — the type does that. */
+/* Highlights' header: a full-viewport slate panel with the photograph pushed
+   right back behind it, everything centred, and a scroll cue at the foot. */
 .hero {
   position: relative;
-  padding: 84px 0 108px;
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding: 120px 0 110px;
+  text-align: center;
   color: #fff;
   background:
-    linear-gradient(105deg, rgba(11, 13, 16, 0.94) 0%, rgba(11, 13, 16, 0.82) 42%, rgba(11, 13, 16, 0.45) 100%),
-    url('/images/hero.jpg') center 30% / cover no-repeat,
-    var(--ink);
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 140px;
-  background: linear-gradient(180deg, transparent, var(--page));
-  pointer-events: none;
+    linear-gradient(180deg, rgba(49, 58, 61, 0.93) 0%, rgba(38, 45, 47, 0.96) 100%),
+    url('/images/hero.jpg') center 35% / cover no-repeat,
+    var(--slate);
 }
 
 .hero-grid {
   position: relative;
   z-index: 1;
-  max-width: 620px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.hero .eyebrow {
+  justify-content: center;
+  color: #ff9a7a;
 }
 
 .hero h1 {
   color: #fff;
-  font-size: clamp(38px, 6vw, 60px);
-  margin: 18px 0 20px;
+  font-size: clamp(40px, 7vw, 68px);
+  margin: 20px 0 0;
+}
+
+/* The template's signature: a short rule between title and copy. */
+.hero h1::after {
+  content: '';
+  display: block;
+  width: 74px;
+  height: 3px;
+  margin: 26px auto;
+  border-radius: 999px;
+  background: var(--accent);
 }
 
 .hero .lede {
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.76);
   font-size: 18px;
-}
-
-.hero .eyebrow {
-  color: #ff9a7a;
+  max-width: 620px;
+  margin: 0 auto;
 }
 
 .hero .btn-ghost {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
 }
 
 .hero .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 32px 0 26px;
 }
 
 .hero-points {
-  color: rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-/* Stat cards that straddle the hero's bottom edge. */
-.hero-cards {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-top: -56px;
+.hero-points li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.hero-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow-md);
-}
-
-.hero-card strong {
-  display: block;
-  font-family: var(--display);
-  font-size: 26px;
-  color: var(--ink);
-  line-height: 1.1;
-}
-
-.hero-card span {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.hero-card-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: var(--accent-soft);
+.hero-points svg {
   color: var(--accent);
-  margin-bottom: 12px;
+  flex: none;
 }
 
-.hero h1 em {
-  font-style: normal;
-  color: var(--accent);
+/* Sticky headers sit above the hero in normal flow, so a transparent one shows
+   the page background rather than the photo. On the landing page it is fixed,
+   and the hero's top padding leaves room for it. */
+.site-header.over-hero {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
 }
+
+/* Anchor targets must clear the fixed bar. */
+[id] {
+  scroll-margin-top: 84px;
+}
+
+/* Transparent over the hero, solid once you scroll past it. */
+.site-header.over-hero:not(.is-solid) {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+}
+
+.site-header.over-hero:not(.is-solid) .brand {
+  color: #fff;
+}
+
+.site-header.over-hero:not(.is-solid) .brand-mark {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.site-header.over-hero:not(.is-solid) .header-link {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.site-header.over-hero:not(.is-solid) .header-link:hover,
+.site-header.over-hero:not(.is-solid) .header-link.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+
 
 .hero-cta {
   display: flex;
@@ -1161,11 +1193,7 @@ input[aria-invalid='true'] {
     gap: 40px;
   }
 
-  .hero-cards {
-    grid-template-columns: 1fr;
-    margin-top: -40px;
-  }
-
+  
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1181,13 +1209,8 @@ input[aria-invalid='true'] {
   }
 
   .hero {
-    /* Extra bottom room so the feature line clears both the fade-out and the
-       stat cards that overlap the hero's lower edge. */
-    padding: 44px 0 120px;
-  }
-
-  .hero::after {
-    height: 80px;
+    padding: 96px 0 96px;
+    min-height: 92svh;
   }
 
   .hero-cta .btn {

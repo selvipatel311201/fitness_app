@@ -11,10 +11,19 @@ import { draftFromProfile, emptyDraft } from './lib/validate';
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
   const [editing, setEditing] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (profile) saveProfile(profile);
   }, [profile]);
+
+  // The header sits transparent over the hero and turns solid past it.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Submitting from the bottom of a long form would otherwise drop you into the
   // middle of the plan.
@@ -38,7 +47,7 @@ export default function App() {
 
   return (
     <>
-      <header className="site-header">
+      <header className={`site-header${!profile ? ' over-hero' : ''}${scrolled ? ' is-solid' : ''}`}>
         <div className="shell header-inner">
           <a className="brand" href="#top">
             <Logo />
@@ -68,9 +77,7 @@ export default function App() {
                 <span className="eyebrow">
                   <Icon name="bolt" size={14} /> Free · no account · private
                 </span>
-                <h1>
-                  Your body. Your goal. <em>A plan that fits.</em>
-                </h1>
+                <h1>Your body. Your goal. A plan that fits.</h1>
                 <p className="lede">
                   Tell FitPlan your numbers and it works out exactly what to eat and how to train — calories, macros,
                   meals and a weekly split, built around the time you actually have.
