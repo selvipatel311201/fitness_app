@@ -8,6 +8,13 @@ checkpoints.
 Everything is computed in the browser and stored in `localStorage`. There is no
 backend and nothing is uploaded, photo included.
 
+**Save as PDF** uses the browser's own print-to-PDF through a print stylesheet,
+so the output is selectable vector text rather than a screenshot, and no PDF
+library ships in the bundle. **Email my plan** opens a `mailto:` with the plan
+written into the message body — the page never sends anything itself, which is
+what keeps the no-upload promise true. Because a `mailto:` cannot carry an
+attachment, sending the PDF means saving it first and attaching it by hand.
+
 ## Stack
 
 React 19 · TypeScript (strict) · Vite · plain CSS · GitHub Actions → GitHub Pages

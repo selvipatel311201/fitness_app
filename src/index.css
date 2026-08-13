@@ -700,6 +700,9 @@ input[aria-invalid='true'] {
 /* --- buttons -------------------------------------------------------------- */
 
 .btn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
   padding: 13px 26px;
   border: 1px solid var(--hairline-strong);
   border-radius: var(--radius);
@@ -800,6 +803,25 @@ input[aria-invalid='true'] {
   white-space: nowrap;
 }
 
+.plan-actions {
+  flex-wrap: wrap;
+}
+
+.plan-actions-hint {
+  margin-top: 12px;
+  max-width: 640px;
+}
+
+.plan-actions-hint em {
+  font-style: normal;
+  color: var(--ink);
+}
+
+/* Only rendered on paper. */
+.print-head {
+  display: none;
+}
+
 /* --- disclaimer ----------------------------------------------------------- */
 
 .disclaimer {
@@ -808,6 +830,121 @@ input[aria-invalid='true'] {
   border-top: 1px solid var(--hairline);
   padding-top: 20px;
   max-width: 720px;
+}
+
+/* --- print / save as PDF -------------------------------------------------- */
+
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+@media print {
+  :root {
+    --page: #fff;
+    --paper: #fff;
+    --surface: #fff;
+    --ink: #000;
+    --body: #1c1c1c;
+    --muted: #5a5a5a;
+    --hairline: #b8b8b8;
+    --accent: #1b5e3f;
+  }
+
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .promo-strip,
+  .site-header,
+  .site-footer,
+  .crumbs,
+  .plan-actions,
+  .plan-actions-hint {
+    display: none !important;
+  }
+
+  .print-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+
+  .print-head strong {
+    font-family: var(--serif);
+    font-size: 15pt;
+    color: #000;
+  }
+
+  .print-head span {
+    font-size: 9pt;
+    color: var(--muted);
+  }
+
+  .main {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* Keep a card, a section heading, or a table row from splitting across pages. */
+  .section,
+  .card,
+  .hero,
+  .notice,
+  .disclaimer,
+  .rows li,
+  .table tr {
+    break-inside: avoid;
+  }
+
+  .section {
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 15pt;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .tile {
+    min-height: 0;
+  }
+
+  .tile-value {
+    font-size: 17pt;
+  }
+
+  .hero-title {
+    font-size: 21pt;
+  }
+
+  /* Browsers strip backgrounds when printing unless asked not to. */
+  .macro-fill,
+  .progress-bar,
+  .badge,
+  .notice {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 /* --- responsive ----------------------------------------------------------- */

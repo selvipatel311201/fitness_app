@@ -1,7 +1,8 @@
 import type { Profile } from '../types';
-import { GOAL_LABELS, buildPlan } from '../lib/calc';
+import { GOAL_LABELS, buildPlan, todayIso } from '../lib/calc';
 import { buildMeals, dietNotes } from '../lib/mealPlan';
 import { buildTrainingWeek } from '../lib/trainingPlan';
+import { buildMailtoHref, planFileName } from '../lib/planText';
 
 interface Props {
   profile: Profile;
@@ -36,8 +37,32 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
   // weekly rate can push projectedDays one day past an otherwise on-target plan.
   const clamped = plan.safety.level === 'unrealistic';
 
+  const mailtoHref = buildMailtoHref({ profile, plan, meals, week });
+
+  /**
+   * Print dialogs name the PDF after the document title, so swap it for the
+   * duration of the print and put it back afterwards.
+   */
+  function handlePrint() {
+    const previous = document.title;
+    document.title = planFileName(profile);
+    const restore = () => {
+      document.title = previous;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+  }
+
   return (
     <>
+      <div className="print-head">
+        <strong>FitPlan</strong>
+        <span>
+          {profile.name ? `${profile.name}'s plan` : 'Your plan'} · generated {formatDate(todayIso())}
+        </span>
+      </div>
+
       <section className="section hero">
         <div className="hero-media">
           {profile.photo ? <img src={profile.photo} alt="Your progress photo" /> : <span>No photo</span>}
@@ -228,7 +253,13 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
         </div>
       </section>
 
-      <div className="form-actions">
+      <div className="form-actions plan-actions">
+        <button className="btn btn-primary" onClick={handlePrint}>
+          Save as PDF
+        </button>
+        <a className="btn" href={mailtoHref}>
+          Email my plan
+        </a>
         <button className="btn" onClick={onEdit}>
           Edit details
         </button>
@@ -236,6 +267,10 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
           Start over
         </button>
       </div>
+      <p className="hint plan-actions-hint">
+        “Save as PDF” opens your browser’s print dialog — choose <em>Save as PDF</em> as the destination. “Email my
+        plan” opens your mail app with the plan written into the message; nothing is sent from this page.
+      </p>
 
       <p className="disclaimer">
         Numbers come from standard estimates — Mifflin-St Jeor for metabolic rate and 7,700 kcal per kilogram of body
