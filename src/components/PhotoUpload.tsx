@@ -30,9 +30,7 @@ export function PhotoUpload({ photo, onChange }: Props) {
         {photo ? (
           <img src={photo} alt="Your progress photo" />
         ) : (
-          <span className="photo-placeholder" aria-hidden="true">
-            📷
-          </span>
+          <span className="photo-placeholder">No photo</span>
         )}
       </div>
 
@@ -47,11 +45,11 @@ export function PhotoUpload({ photo, onChange }: Props) {
             e.target.value = '';
           }}
         />
-        <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => inputRef.current?.click()}>
+        <button type="button" className="btn btn-small" disabled={busy} onClick={() => inputRef.current?.click()}>
           {busy ? 'Loading…' : photo ? 'Change photo' : 'Upload photo'}
         </button>
         {photo && (
-          <button type="button" className="btn btn-ghost btn-danger" onClick={() => onChange(null)}>
+          <button type="button" className="btn btn-small btn-quiet" onClick={() => onChange(null)}>
             Remove
           </button>
         )}
