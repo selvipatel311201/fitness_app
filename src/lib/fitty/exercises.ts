@@ -170,10 +170,56 @@ export const EXERCISES: Exercise[] = [
   },
 ];
 
-/** YouTube search links never rot the way a hardcoded video ID does. */
-export function youTubeLink(exercise: Exercise): string {
-  const query = `how to do a ${exercise.name} proper form technique`;
+export interface VideoLink {
+  label: string;
+  url: string;
+}
+
+function search(query: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+/**
+ * Three angles on the same movement, because one tutorial rarely covers all of
+ * them. Search links rather than video IDs — a pinned ID breaks the day the
+ * uploader deletes it, and these always surface current results.
+ */
+export function youTubeLinks(exercise: Exercise): VideoLink[] {
+  const n = exercise.name.toLowerCase();
+  return [
+    { label: `${exercise.name}: full form tutorial`, url: search(`how to do a ${n} proper form tutorial`) },
+    { label: `${exercise.name}: common mistakes`, url: search(`${n} common mistakes form fix`) },
+    { label: `${exercise.name}: beginner version`, url: search(`${n} for beginners easier variation progression`) },
+  ];
+}
+
+/** Kept for anything that only needs the primary link. */
+export function youTubeLink(exercise: Exercise): string {
+  return youTubeLinks(exercise)[0].url;
+}
+
+const BY_GOAL: Record<string, string[]> = {
+  'lose-fat': ['Squat', 'Burpee', 'Running', 'Plank'],
+  'build-muscle': ['Squat', 'Deadlift', 'Row', 'Overhead press'],
+  endurance: ['Running', 'Lunge', 'Plank', 'Squat'],
+  maintain: ['Squat', 'Push-up', 'Plank', 'Row'],
+};
+
+/** A handful of movements worth learning first, biased to the user's goal. */
+export function suggestExercises(goal: string | undefined, count = 3, exclude: string[] = []): Exercise[] {
+  const preferred = BY_GOAL[goal ?? 'maintain'] ?? BY_GOAL.maintain;
+  const ordered = [
+    ...preferred.map((name) => EXERCISES.find((e) => e.name === name)).filter((e): e is Exercise => Boolean(e)),
+    ...EXERCISES,
+  ];
+  const picked: Exercise[] = [];
+  for (const exercise of ordered) {
+    if (picked.length >= count) break;
+    if (exclude.includes(exercise.name)) continue;
+    if (picked.some((p) => p.name === exercise.name)) continue;
+    picked.push(exercise);
+  }
+  return picked;
 }
 
 export function findExercise(text: string): Exercise | null {

@@ -2,7 +2,7 @@ import type { Profile } from '../../types';
 import { GOAL_LABELS, buildPlan, todayIso } from '../calc';
 import { buildMeals } from '../mealPlan';
 import { buildTrainingWeek } from '../trainingPlan';
-import { findExercise, youTubeLink } from './exercises';
+import { EXERCISES, findExercise, suggestExercises, youTubeLinks } from './exercises';
 import { FACT_LABELS, type Facts, missingFacts } from './facts';
 
 export interface Reply {
@@ -13,6 +13,8 @@ export interface Reply {
   profile?: Profile;
   /** The fact this reply is asking for, so the next answer is read in context. */
   asking?: keyof Facts;
+  /** Exercise names this reply covered, so the next request brings new ones. */
+  showed?: string[];
 }
 
 function titleCase(s: string): string {
@@ -91,9 +93,31 @@ function exerciseAnswer(text: string): Reply | null {
       `⚠️ Watch out: ${exercise.watchOut}`,
       `Start with: ${exercise.starter}`,
       '',
-      `Watch it done properly: ${youTubeLink(exercise)}`,
+      'Videos:',
+      ...youTubeLinks(exercise).map((link) => `• [${link.label}](${link.url})`),
     ].join('\n'),
-    chips: ['Show me another exercise', 'What should I eat today?'],
+    chips: ['Show me more exercises', 'What should I eat today?'],
+    showed: [exercise.name],
+  };
+}
+
+/** Several movements at once, each with its own video. */
+function exerciseRoundup(goal: string | undefined, exclude: string[] = [], count = 3): Reply {
+  const picks = suggestExercises(goal, count, exclude);
+  return {
+    text: [
+      goal ? 'Three worth learning for your goal, with a video each:' : 'Three good ones to start with, with a video each:',
+      '',
+      ...picks.flatMap((exercise) => [
+        `**${exercise.name}** — ${exercise.targets}. ${exercise.starter}`,
+        `• [Watch: ${exercise.name} form tutorial](${youTubeLinks(exercise)[0].url})`,
+        `• [Watch: ${exercise.name} common mistakes](${youTubeLinks(exercise)[1].url})`,
+        '',
+      ]),
+      'Ask me about any of them and I will walk you through the steps.',
+    ].join('\n'),
+    chips: [`How do I do a ${picks[0].name.toLowerCase()}?`, 'Show me more exercises'],
+    showed: picks.map((p) => p.name),
   };
 }
 
@@ -157,6 +181,8 @@ interface Context {
   isFirstMessage: boolean;
   /** The fact Fitty asked for last turn, if any. */
   lastAsked?: keyof Facts;
+  /** Exercises already shown, so a repeat request brings different ones. */
+  shown?: string[];
 }
 
 /**
@@ -198,16 +224,23 @@ export function respond(input: string, ctx: Context): Reply {
     };
   }
 
-  // "How do I do X" — check before profile questions so it works immediately.
-  if (/\b(how (do|to|should)|form|technique|proper way|teach me|show me)\b/.test(t) || /^(squat|deadlift|plank|burpee|lunge)s?\b/.test(t)) {
+  // A named exercise always wins — the single answer already carries three
+  // links, so "video for squats" lands here rather than in the roundup.
+  if (/\b(how (do|to|should)|form|technique|proper way|teach me|show me|video|youtube|link|watch)\b/.test(t) || /^(squat|deadlift|plank|burpee|lunge)s?\b/.test(t)) {
     const answer = exerciseAnswer(text);
     if (answer) return answer;
-    if (/\bexercise\b|\bmove\b/.test(t)) {
-      return {
-        text: "I don't know that one yet. I can walk you through squats, push-ups, deadlifts, planks, lunges, overhead press, rows, pull-ups, hip thrusts, burpees, running and curls.",
-        chips: ['How do I do a squat?', 'How do I do a push-up?'],
-      };
-    }
+  }
+
+  // Asking for videos, links, or exercises in general — hand over several.
+  if (/\b(videos?|youtube|links?|clips?|tutorials?)\b/.test(t) || /\b(more|other|another|different|some|few|list of|examples? of)\b.*\b(exercises?|workouts?|moves?|movements?)\b/.test(t) || /\b(exercises?|moves?)\b.*\b(list|examples?|ideas?|suggest)/.test(t)) {
+    return exerciseRoundup(profile?.goal ?? ctx.facts.goal, ctx.shown ?? []);
+  }
+
+  if (/\b(how (do|to|should)|form|technique)\b/.test(t) && /\bexercise\b|\bmove\b/.test(t)) {
+    return {
+      text: `I don't know that one yet. I can walk you through ${EXERCISES.map((e) => e.name.toLowerCase()).join(', ')}.`,
+      chips: ['How do I do a squat?', 'Show me more exercises'],
+    };
   }
 
   // A bare exercise name anywhere in the message.

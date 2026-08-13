@@ -792,3 +792,15 @@ input[aria-invalid='true'] {
     width: auto;
   }
 }
+
+.fitty-linkline {
+  margin-top: 0.2em;
+}
+
+.fitty-linkline a {
+  display: inline-block;
+  padding: 0.15em 0;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: solid 1px currentColor;
+}

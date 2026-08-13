@@ -4,6 +4,9 @@ import type { Profile } from '../types';
 import { answerFor, extractFacts, type Facts, missingFacts } from '../lib/fitty/facts';
 import { factsToProfile, planSummary, respond } from '../lib/fitty/engine';
 import { BackendError, askFitty, hasBackend, type ChatTurn } from '../lib/fitty/backend';
+import { EXERCISES } from '../lib/fitty/exercises';
+
+const EXERCISE_COUNT = EXERCISES.length;
 
 interface Props {
   profile: Profile | null;
@@ -23,23 +26,29 @@ interface Message {
 const GREETING =
   "Hi, I'm Fitty 👋 your personal coach. Tell me a bit about yourself and I'll build your plan — or ask me how to do any exercise.";
 
-/** Turns **bold**, bullet lines and bare URLs into elements. Deliberately tiny. */
+/** Turns **bold**, [label](url) links and bare URLs into elements. Deliberately tiny. */
 function renderText(text: string) {
   return text.split('\n').map((line, i) => {
     if (line.trim() === '') return <span key={i} className="fitty-gap" />;
-    const parts: Array<string | { url: string }> = [];
-    const urlRe = /(https?:\/\/[^\s]+)/g;
+
+    const parts: Array<string | { url: string; label: string }> = [];
+    // Labelled links first, then anything left that is a bare URL.
+    const linkRe = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
     let last = 0;
     let match: RegExpExecArray | null;
-    while ((match = urlRe.exec(line))) {
+    while ((match = linkRe.exec(line))) {
       if (match.index > last) parts.push(line.slice(last, match.index));
-      parts.push({ url: match[0] });
+      parts.push(
+        match[3] ? { url: match[3], label: 'Watch on YouTube' } : { url: match[2], label: match[1] },
+      );
       last = match.index + match[0].length;
     }
     if (last < line.length) parts.push(line.slice(last));
 
+    const isLinkLine = line.trim().startsWith('•') && parts.some((p) => typeof p !== 'string');
+
     return (
-      <p key={i} className="fitty-line">
+      <p key={i} className={`fitty-line${isLinkLine ? ' fitty-linkline' : ''}`}>
         {parts.map((part, j) =>
           typeof part === 'string' ? (
             <span key={j}>
@@ -47,7 +56,7 @@ function renderText(text: string) {
             </span>
           ) : (
             <a key={j} href={part.url} target="_blank" rel="noreferrer noopener">
-              Watch on YouTube ↗
+              ▶ {part.label} ↗
             </a>
           ),
         )}
@@ -63,6 +72,8 @@ export function Fitty({ profile, onProfile }: Props) {
   const [facts, setFacts] = useState<Facts>({});
   /** The fact Fitty last asked for — lets a bare "24" land on the right field. */
   const [asking, setAsking] = useState<keyof Facts | undefined>(undefined);
+  /** Exercises already covered, so "show me more" brings different ones. */
+  const [shown, setShown] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -163,7 +174,15 @@ export function Fitty({ profile, onProfile }: Props) {
           profile: built ?? profile,
           isFirstMessage: messages.length <= 1,
           lastAsked: asking,
+          shown,
         });
+        if (reply.showed?.length) {
+          // Once everything has been covered, start the rotation over.
+          setShown((s) => {
+            const next = [...new Set([...s, ...reply.showed!])];
+            return next.length >= EXERCISE_COUNT ? [...reply.showed!] : next;
+          });
+        }
         // Completing the profile is the moment worth celebrating.
         if (built && nowComplete && !wasComplete) {
           setAsking(undefined);
