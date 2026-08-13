@@ -46,11 +46,20 @@ publishes to GitHub Pages. One-time setup:
 `vite.config.ts` sets `base: './'`, so the build works at any path — a project
 site (`user.github.io/repo/`), a user site, or a custom domain — with no change.
 
-### Custom domain: selvipatel.com
+### Later: custom domain (selvipatel.com)
 
-`public/CNAME` holds the domain, so every build ships it in `dist/` and Pages
-keeps the custom domain across deploys (without it, Pages resets the domain each
-time). Two things to do once, at your DNS provider:
+The site starts out on its `github.io` URL. To move it to the domain, do the DNS
+setup below **first**, then add the domain to the repo:
+
+```bash
+mkdir -p public && echo 'selvipatel.com' > public/CNAME
+```
+
+That file ships in every build, which is what keeps Pages from resetting the
+custom domain on each deploy. Add it before DNS resolves and the site is
+unreachable at both URLs, so leave it out until the records are live.
+
+At your DNS provider:
 
 1. **Apex** (`selvipatel.com`) — four `A` records:
    ```
@@ -62,7 +71,7 @@ time). Two things to do once, at your DNS provider:
    Add the matching `AAAA` records if your provider supports IPv6:
    `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`,
    `2606:50c0:8003::153`.
-2. **www** — a `CNAME` record pointing to `<your-github-username>.github.io`.
+2. **www** — a `CNAME` record pointing to `selvipatel311201.github.io`.
 
 Then in **Settings → Pages → Custom domain** enter `selvipatel.com`, wait for the
 DNS check to pass, and tick **Enforce HTTPS** (the certificate can take up to an
@@ -70,7 +79,7 @@ hour). DNS propagation is usually minutes but can take up to 24 hours.
 
 If you'd rather keep `selvipatel.com` for something else and put this on a
 subdomain like `fit.selvipatel.com`, change `public/CNAME` to that hostname and
-add a single `CNAME` record for `fit` → `<your-github-username>.github.io`.
+add a single `CNAME` record for `fit` → `selvipatel311201.github.io`.
 
 ## How the numbers are worked out
 
