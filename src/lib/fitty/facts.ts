@@ -27,6 +27,28 @@ export const FACT_LABELS: Record<keyof Facts, string> = {
   days: 'how many days you want',
 };
 
+
+/**
+ * Goal words appear all the time in questions that are not about the goal at
+ * all — "stamina exercises", "running form". Unless the sentence actually
+ * states an intention ("I want to…", "my goal is…") or is one of the exact
+ * chip labels, a casual mention must not rewrite what the person is training
+ * for. `lenient` is for answering a direct "what are you going for?".
+ */
+export function detectGoal(input: string, lenient: boolean): Goal | undefined {
+  const t = ` ${input.toLowerCase().trim()} `;
+  const declares =
+    /\b(want to|wants to|wanna|would like to|i'd like|my goal|goal is|goal:|trying to|aiming|hoping to|need to|looking to|help me|plan to)\b/.test(t);
+  const exact = /^\s*(lose fat|build muscle|maintain weight|improve endurance|gain muscle|lose weight)\s*$/.test(t);
+  if (!lenient && !declares && !exact) return undefined;
+
+  if (/\b(lose|losing|cut|cutting|drop|shed|slim|fat loss|weight loss|lean out)\b/.test(t)) return 'lose-fat';
+  if (/\b(gain|bulk|build muscle|muscle|mass|bigger|stronger|strength)\b/.test(t)) return 'build-muscle';
+  if (/\b(endurance|stamina|marathon|running|run a|cardio fitness|5k|10k)\b/.test(t)) return 'endurance';
+  if (/\b(maintain|maintenance|stay the same|keep my weight|tone)\b/.test(t)) return 'maintain';
+  return undefined;
+}
+
 /** Everything needed before a full plan can be built. */
 export const REQUIRED: Array<keyof Facts> = [
   'age',
@@ -116,10 +138,7 @@ export function extractFacts(input: string): Facts {
   }
 
   // --- goal ---------------------------------------------------------------
-  if (/\b(lose|losing|cut|cutting|drop|shed|slim|fat loss|weight loss|lean out)\b/.test(t)) facts.goal = 'lose-fat';
-  else if (/\b(gain|bulk|build muscle|muscle|mass|bigger|stronger|strength)\b/.test(t)) facts.goal = 'build-muscle';
-  else if (/\b(endurance|stamina|marathon|running|run a|cardio fitness|5k|10k)\b/.test(t)) facts.goal = 'endurance';
-  else if (/\b(maintain|maintenance|stay the same|keep my weight|tone)\b/.test(t)) facts.goal = 'maintain';
+  facts.goal = detectGoal(t, false);
 
   // --- diet ---------------------------------------------------------------
   if (/\bvegan\b/.test(t)) facts.diet = 'vegan';
@@ -233,10 +252,8 @@ export function answerFor(field: keyof Facts, text: string): Facts {
     }
 
     case 'goal': {
-      const g = extractFacts(text).goal;
-      if (g) return { goal: g };
-      if (/\b(1|first|a)\b/.test(t)) return {};
-      return {};
+      const g = detectGoal(text, true);
+      return g ? { goal: g } : {};
     }
 
     case 'diet': {

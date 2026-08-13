@@ -2,7 +2,7 @@ import type { Profile } from '../../types';
 import { GOAL_LABELS, buildPlan, todayIso } from '../calc';
 import { buildMeals } from '../mealPlan';
 import { buildTrainingWeek } from '../trainingPlan';
-import { EXERCISES, findExercise, findGroup, suggestExercises, youTubeLinks } from './exercises';
+import { findExercise, findGroup, suggestExercises, youTubeLinks } from './exercises';
 import { normalizeTypos } from './text';
 import { FACT_LABELS, type Facts, missingFacts } from './facts';
 
@@ -261,10 +261,15 @@ export function respond(input: string, ctx: Context): Reply {
     if (answer) return answer;
   }
 
-  // A body part — "leg exercise", "ab workout", "something for my back".
+  // A body part — "arms", "leg exercise", "something for my back". Naming the
+  // body part IS the question, so a short message needs no other keyword; a
+  // longer sentence still has to look like a request.
   const groupReply = groupAnswer(text);
-  if (groupReply && /\b(exercise|exercises|workout|workouts|move|moves|movement|train|training|how|what|which|best|good|routine|day|stretch|video|link|something|anything|help|need|want|give|show|suggest|recommend|tips?|for my|strengthen|tone|build)\b/.test(t)) {
-    return groupReply;
+  if (groupReply) {
+    const words = text.trim().split(/\s+/).length;
+    const namesOnly = words <= 4 && !/\d/.test(t);
+    const asksFor = /\b(exercise|exercises|workout|workouts|move|moves|movement|movements|train|training|how|what|which|best|good|routine|day|stretch|video|link|links|something|anything|help|need|want|give|show|suggest|recommend|tips?|for my|strengthen|strong|tone|build|grow|bigger|lose|burn)\b/.test(t);
+    if (namesOnly || asksFor) return groupReply;
   }
 
   // Asking for videos, links, or exercises in general — hand over several.
@@ -275,13 +280,15 @@ export function respond(input: string, ctx: Context): Reply {
   // Only for genuine "how do I perform X" questions. Matching a bare
   // "workout" here would swallow "what's my workout today?".
   if (/\b(how (do|to|should|can)|form|technique|proper way|teach me|show me how)\b/.test(t)) {
+    const roundup = exerciseRoundup(profile?.goal ?? ctx.facts.goal, ctx.shown ?? []);
     return {
+      ...roundup,
       text: [
-        `I don't know that exact one, but I can walk you through any of these: ${EXERCISES.map((e) => e.name.toLowerCase()).join(', ')}.`,
+        "I don't know that exact movement yet. You can ask me by body part — legs, chest, back, core, arms or cardio — or start with these:",
         '',
-        'You can also ask by body part — legs, chest, back, core, arms or cardio.',
+        roundup.text.split('\n').slice(2).join('\n'),
       ].join('\n'),
-      chips: ['Leg exercises', 'Core exercises', 'How do I do a squat?'],
+      chips: ['Leg exercises', 'Core exercises', 'Arm exercises'],
     };
   }
 

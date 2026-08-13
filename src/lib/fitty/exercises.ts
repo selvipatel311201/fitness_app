@@ -257,7 +257,7 @@ export interface MuscleGroup {
 export const GROUPS: MuscleGroup[] = [
   {
     label: 'legs',
-    aliases: ['leg', 'legs', 'leg day', 'lower body', 'quad', 'quads', 'hamstring', 'hamstrings', 'thigh', 'thighs', 'glute', 'glutes', 'butt', 'bum', 'calf', 'calves'],
+    aliases: ['leg', 'legs', 'leg day', 'legday', 'lower body', 'quad', 'quads', 'quadriceps', 'hamstring', 'hamstrings', 'hams', 'thigh', 'thighs', 'glute', 'glutes', 'butt', 'bum', 'hip', 'hips', 'calf', 'calves'],
     names: ['Squat', 'Lunge', 'Hip thrust'],
   },
   {
@@ -267,17 +267,17 @@ export const GROUPS: MuscleGroup[] = [
   },
   {
     label: 'back',
-    aliases: ['back', 'lat', 'lats', 'pull day', 'posture'],
+    aliases: ['back', 'lat', 'lats', 'pull day', 'posture', 'trap', 'traps', 'upper back', 'lower back'],
     names: ['Row', 'Pull-up', 'Deadlift'],
   },
   {
     label: 'core',
-    aliases: ['core', 'abs', 'ab', 'six pack', 'sixpack', 'stomach', 'belly', 'tummy', 'midsection', 'waist'],
+    aliases: ['core', 'abs', 'ab', 'abdominal', 'abdominals', 'six pack', 'sixpack', 'stomach', 'belly', 'tummy', 'midsection', 'waist', 'obliques'],
     names: ['Plank', 'Burpee', 'Squat'],
   },
   {
     label: 'arms and shoulders',
-    aliases: ['arm', 'arms', 'bicep', 'biceps', 'tricep', 'triceps', 'shoulder', 'shoulders', 'delts'],
+    aliases: ['arm', 'arms', 'arm day', 'bicep', 'biceps', 'tricep', 'triceps', 'shoulder', 'shoulders', 'delt', 'delts', 'forearm', 'forearms'],
     names: ['Bicep curl', 'Overhead press', 'Push-up'],
   },
   {
@@ -287,7 +287,7 @@ export const GROUPS: MuscleGroup[] = [
   },
   {
     label: 'full body',
-    aliases: ['full body', 'whole body', 'total body', 'all over', 'everything'],
+    aliases: ['full body', 'fullbody', 'whole body', 'total body', 'all over', 'everything', 'all body', 'body'],
     names: ['Squat', 'Push-up', 'Plank'],
   },
 ];
