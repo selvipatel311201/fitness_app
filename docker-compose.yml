@@ -1,0 +1,26 @@
+# Two ways to run the app locally:
+#   docker compose up web    → production build behind nginx on :8080
+#   docker compose up dev    → Vite dev server with hot reload on :5173
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fitness-app:latest
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # Keep the container's node_modules (built for linux) instead of the
+      # host's, which may hold darwin binaries.
+      - /app/node_modules
+    profiles: [dev]

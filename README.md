@@ -27,6 +27,32 @@ npm run preview    # serve the built dist/ locally
 npm run typecheck  # types only
 ```
 
+## Running with Docker
+
+No local Node needed — everything happens inside the containers.
+
+```bash
+docker compose up web              # production build behind nginx → http://localhost:8080
+docker compose --profile dev up dev  # Vite dev server, hot reload → http://localhost:5173
+docker compose down                # stop
+```
+
+`Dockerfile` is a two-stage build: `node:22-alpine` compiles the site, then only
+`dist/` is copied into `nginx:1.27-alpine` (final image ~76 MB, no toolchain or
+`node_modules`). `docker/nginx.conf` adds the SPA fallback and cache headers —
+fingerprinted assets are immutable for a year, `index.html` is never cached.
+
+The `dev` service bind-mounts the source and keeps the container's
+`node_modules`, so edits on the host hot-reload without a rebuild.
+
+On a Mac without Docker Desktop, [Colima](https://github.com/abiosoft/colima)
+provides the daemon headlessly:
+
+```bash
+brew install colima docker docker-compose
+colima start                       # once per boot
+```
+
 ## Deploying
 
 Push to `main` and the workflow in `.github/workflows/deploy.yml` builds and
