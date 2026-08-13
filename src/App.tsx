@@ -9,7 +9,7 @@ import { clearProfile, loadProfile, saveProfile } from './lib/storage';
 import { draftFromProfile, emptyDraft } from './lib/validate';
 
 const PROMOS = [
-  'Free forever · No account · Nothing leaves your device',
+  'Free forever · No account · Your plan stays on your device',
   'Your plan in two minutes — calories, meals and a training week',
   'Every movement explained in plain steps, with videos',
 ];
@@ -107,7 +107,7 @@ export default function App() {
                 <h1>Your plan, in two minutes</h1>
                 <p className="lede">
                   Tell us your numbers and we work out exactly what to eat and how to train — calories, macros, meals
-                  and a weekly split built around the time you actually have.
+                  and a weekly split built around the time you actually have. Ask Fitty anything along the way.
                 </p>
                 <div className="hero-cta">
                   <a className="btn btn-ghost" href="#form">
@@ -125,7 +125,7 @@ export default function App() {
                     <Icon name="check" size={15} /> Save it as a PDF
                   </li>
                   <li>
-                    <Icon name="check" size={15} /> Nothing leaves your device
+                    <Icon name="check" size={15} /> Your plan stays on your device
                   </li>
                 </ul>
               </div>
@@ -201,7 +201,7 @@ export default function App() {
                     {
                       icon: 'shield',
                       title: 'Safe by design',
-                      body: 'The pace is capped at what a body can do, and nothing you type ever leaves this device.',
+                      body: 'The pace is capped at what a body can do. Your plan and photo never leave this device — only chat messages go out, to the AI that answers them.',
                     },
                   ].map((item, i) => (
                     <Reveal as="li" key={item.title} delay={i * 70}>
@@ -280,7 +280,7 @@ export default function App() {
                 <Reveal>
                   <div className="faq">
                     {[
-                      ['Is my data really private?', 'Yes. There is no account and no server. Your details, photo and plan live in this browser only — clearing site data deletes them, and nothing is ever uploaded.'],
+                      ['What happens to my data?', 'There is no account and no database. Your details, photo and plan live in this browser only — clearing site data deletes them, and they are never uploaded. The one exception is the chat: what you type to Fitty is sent to the AI service that writes the reply. Your plan is not sent with it unless you have told Fitty about it.'],
                       ['Where do the numbers come from?', 'Mifflin-St Jeor for resting metabolic rate, an activity multiplier for maintenance, and 7,700 kcal per kilogram of body mass for the deficit or surplus. Protein is 1.6–2.0 g/kg depending on your goal.'],
                       ['What if I ask for something unrealistic?', 'It tells you. The pace is capped at about 1% of bodyweight lost per week and never drops below 1,500 kcal for men or 1,200 for women — if your timeline needs more, it plans the fastest healthy version and says so.'],
                       ['Can I get the plan out of the browser?', 'Save as PDF uses your browser’s own print-to-PDF, so the text stays selectable. Email my plan opens your mail app with everything written in.'],

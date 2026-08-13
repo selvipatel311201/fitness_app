@@ -23,6 +23,25 @@ interface Message {
   offer?: Profile;
 }
 
+/**
+ * In AI mode the model writes its own questions, so there is no `asking` field
+ * to read. Inferring it from the question keeps bare answers ("24", "165")
+ * attached to the right fact — without it the plan never completes.
+ */
+function inferAsking(question: string): keyof Facts | undefined {
+  const q = question.toLowerCase();
+  if (/\bhow old|\bage\b/.test(q)) return 'age';
+  if (/\bmale or female|\bgender|\bsex\b/.test(q)) return 'sex';
+  if (/\bhow tall|\bheight\b/.test(q)) return 'heightCm';
+  if (/\btarget weight|\baiming for|\bgoal weight|\bwant to (weigh|reach)/.test(q)) return 'targetWeightKg';
+  if (/\bweigh|\bweight\b/.test(q)) return 'weightKg';
+  if (/\bhow many days|\btimeline|\bhow long/.test(q)) return 'days';
+  if (/\bhow do you eat|\bdiet|\bvegetarian|\bvegan/.test(q)) return 'diet';
+  if (/\btrain|\bexercise|\bworkout|\bactive/.test(q) && /\bhow (often|many)|\bweek\b/.test(q)) return 'activity';
+  if (/\bgoal\b|\bgoing for|\btrying to (do|achieve)/.test(q)) return 'goal';
+  return undefined;
+}
+
 const GREETING =
   "Hi, I'm Fitty 👋 your personal coach. Tell me a bit about yourself and I'll build your plan — or ask me how to do any exercise.";
 
@@ -84,6 +103,8 @@ export function Fitty({ profile, onProfile }: Props) {
   ]);
 
   const nextId = useRef(1);
+  const messagesRef = useRef<Message[]>([]);
+  messagesRef.current = messages;
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -172,6 +193,10 @@ export function Fitty({ profile, onProfile }: Props) {
           onChunk: (chunk) =>
             setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, text: msg.text + chunk } : msg))),
         });
+        const reply = (await Promise.resolve(
+          messagesRef.current.find((m) => m.id === id)?.text ?? '',
+        )) as string;
+        setAsking(inferAsking(reply));
         if (built && !wasComplete) {
           setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, offer: built } : msg)));
         }
@@ -200,13 +225,22 @@ export function Fitty({ profile, onProfile }: Props) {
         }
       }
     } catch (e) {
+      // The rules engine is the safety net: if the model is unreachable or over
+      // its limit, answer locally rather than leaving the person stuck.
+      const local = respond(text, {
+        facts: merged,
+        profile: built ?? profile,
+        isFirstMessage: messages.length <= 1,
+        lastAsked: asking,
+        shown,
+      });
+      setMessages((m) => m.filter((msg) => !(msg.role === 'fitty' && msg.text === '')));
       push({
         role: 'fitty',
-        text:
-          e instanceof BackendError
-            ? e.message
-            : "Something went wrong reaching my brain. I'll keep going on my own — ask me again.",
+        ...local,
+        text: `${e instanceof BackendError ? e.message : 'My AI coach is unreachable right now.'}\n\n${local.text}`,
       });
+      setAsking(local.asking);
     } finally {
       setBusy(false);
     }
@@ -294,7 +328,8 @@ export function Fitty({ profile, onProfile }: Props) {
           </button>
         </form>
         <p className="fitty-fineprint">
-          General fitness guidance, not medical advice. {hasBackend ? 'Messages go to your own Claude proxy.' : 'Nothing leaves this device.'}
+          General fitness guidance, not medical advice.{' '}
+          {hasBackend ? 'Chat messages are sent to the AI that answers them; your plan stays on this device.' : 'Nothing leaves this device.'}
         </p>
       </section>
     </>
