@@ -128,7 +128,8 @@ export function extractFacts(input: string): Facts {
   else if (/\b(vegetarian|veggie|\bveg\b)\b/.test(t)) facts.diet = 'vegetarian';
 
   // --- activity -----------------------------------------------------------
-  if (/\b(sedentary|desk job|no exercise|never exercise|not active|couch)\b/.test(t)) facts.activity = 'sedentary';
+  if (/\b(sedentary|desk job|no exercise|never exercise|not active|couch|barely|hardly|rarely|not much|nothing|none|don'?t train|do not train|new to this|just starting)\b/.test(t))
+    facts.activity = 'sedentary';
   else if (/\b(athlete|twice a day|two a day|professional|competitive)\b/.test(t)) facts.activity = 'athlete';
   else if (/\b(very active|6 days|7 days|six days|seven days|daily workout|every day)\b/.test(t)) facts.activity = 'active';
   else if (/\b(beginner|just start|light|1-2|1 to 2|once a week|twice a week|2 days)\b/.test(t)) facts.activity = 'light';
@@ -154,4 +155,114 @@ export function extractFacts(input: string): Facts {
 
 export function missingFacts(facts: Facts): Array<keyof Facts> {
   return REQUIRED.filter((k) => facts[k] === undefined);
+}
+
+/**
+ * Reads a reply in the context of the question that was just asked, so a bare
+ * "24" or "165" lands on the right field. Without this the extractor sees no
+ * units or keywords, learns nothing, and the same question repeats forever.
+ */
+const UNITS: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+  ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+  seventeen: 17, eighteen: 18, nineteen: 19,
+};
+const TENS: Record<string, number> = {
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+};
+
+/** "twenty four" → 24, so a spelled-out answer isn't a dead end. */
+function wordsToNumber(text: string): number | undefined {
+  const words = text.toLowerCase().replace(/-/g, ' ').split(/\s+/);
+  let total: number | undefined;
+  for (const word of words) {
+    if (word === 'hundred' && total !== undefined) total *= 100;
+    else if (TENS[word] !== undefined) total = (total ?? 0) + TENS[word];
+    else if (UNITS[word] !== undefined) total = (total ?? 0) + UNITS[word];
+  }
+  return total;
+}
+
+export function answerFor(field: keyof Facts, text: string): Facts {
+  const t = text.trim().toLowerCase();
+  const digits = t.match(/\d+(?:\.\d+)?/);
+  // Spelled-out numbers are only trusted where a misread is harmless. "One
+  // sixty five" sums to 66, which would silently become the wrong height.
+  const spellable = field === 'age' || field === 'days' || field === 'activity';
+  const n = digits ? Number(digits[0]) : spellable ? (wordsToNumber(t) ?? NaN) : NaN;
+  const has = Number.isFinite(n);
+  const saysPounds = /\b(lb|lbs|pound)/.test(t);
+
+  switch (field) {
+    case 'age':
+      return has && n >= 13 && n <= 100 ? { age: Math.round(n) } : {};
+
+    case 'sex':
+      if (/\b(f|female|woman|girl|she)\b/.test(t)) return { sex: 'female' };
+      if (/\b(m|male|man|boy|he)\b/.test(t)) return { sex: 'male' };
+      if (/prefer not|rather not|skip|other|neither/.test(t)) return { sex: 'other' };
+      return {};
+
+    case 'heightCm': {
+      const feet = t.match(/(\d)\s*(?:'|ft|feet|foot)\s*(\d{1,2})?/);
+      if (feet) {
+        const cm = Math.round(Number(feet[1]) * 30.48 + (feet[2] ? Number(feet[2]) * 2.54 : 0));
+        return cm >= 100 && cm <= 250 ? { heightCm: cm } : {};
+      }
+      if (!has) return {};
+      if (n >= 100 && n <= 250) return { heightCm: Math.round(n) };
+      // "5.8" or a bare "5" is feet.
+      if (n >= 4 && n <= 7.5) return { heightCm: Math.round(n * 30.48) };
+      if (n >= 48 && n <= 90) return { heightCm: Math.round(n * 2.54) }; // inches
+      return {};
+    }
+
+    case 'weightKg':
+    case 'targetWeightKg': {
+      if (!has) return {};
+      const kg = saysPounds ? Math.round(n * 0.4536 * 10) / 10 : n;
+      return kg >= 30 && kg <= 300 ? { [field]: kg } : {};
+    }
+
+    case 'days': {
+      if (!has) return {};
+      if (/month/.test(t)) return { days: Math.round(n * 30) };
+      if (/week/.test(t)) return { days: Math.round(n * 7) };
+      if (/year/.test(t)) return { days: Math.round(n * 365) };
+      return n >= 7 && n <= 730 ? { days: Math.round(n) } : {};
+    }
+
+    case 'goal': {
+      const g = extractFacts(text).goal;
+      if (g) return { goal: g };
+      if (/\b(1|first|a)\b/.test(t)) return {};
+      return {};
+    }
+
+    case 'diet': {
+      const d = extractFacts(text).diet;
+      return d ? { diet: d } : {};
+    }
+
+    case 'activity': {
+      const a = extractFacts(text).activity;
+      if (a) return { activity: a };
+      // A bare number in answer to "how often do you train?" is days per week.
+      if (has && n >= 0 && n <= 7) {
+        if (n <= 0) return { activity: 'sedentary' };
+        if (n <= 2) return { activity: 'light' };
+        if (n <= 5) return { activity: 'moderate' };
+        return { activity: 'active' };
+      }
+      return {};
+    }
+
+    case 'name': {
+      const clean = text.trim();
+      return /^[a-z][a-z' -]{1,30}$/i.test(clean) ? { name: clean.replace(/\b\w/g, (c) => c.toUpperCase()) } : {};
+    }
+
+    default:
+      return {};
+  }
 }

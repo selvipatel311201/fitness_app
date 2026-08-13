@@ -11,6 +11,8 @@ export interface Reply {
   chips?: string[];
   /** Set when Fitty has enough to build a real plan the app can save. */
   profile?: Profile;
+  /** The fact this reply is asking for, so the next answer is read in context. */
+  asking?: keyof Facts;
 }
 
 function titleCase(s: string): string {
@@ -95,11 +97,29 @@ function exerciseAnswer(text: string): Reply | null {
   };
 }
 
-function askForNext(facts: Facts): Reply {
+function askForNext(facts: Facts, previouslyAsked?: keyof Facts): Reply {
   const missing = missingFacts(facts);
   const known = (Object.keys(facts) as Array<keyof Facts>).filter((k) => facts[k] !== undefined);
 
   const next = missing[0];
+
+  // The same question a second time means the last answer didn't parse. Ask
+  // differently and say exactly what will work, rather than repeating verbatim.
+  if (previouslyAsked && previouslyAsked === next) {
+    const retries: Partial<Record<keyof Facts, { text: string; chips?: string[] }>> = {
+      age: { text: "Sorry, I didn't catch that. Just the number is fine — like 24." },
+      sex: { text: 'Tap one of these so I can pick the right formula:', chips: ['Male', 'Female', 'Prefer not to say'] },
+      heightCm: { text: 'Give me a number — "165 cm" or "5\'6" both work.' },
+      weightKg: { text: 'Just the number is fine — "70 kg" or "154 lbs".' },
+      targetWeightKg: { text: 'The weight you want to reach — a number like 62 works.' },
+      goal: { text: 'Pick whichever is closest:', chips: ['Lose fat', 'Build muscle', 'Maintain weight', 'Improve endurance'] },
+      diet: { text: 'Which one fits you best?', chips: ['Vegetarian', 'Vegan', 'Eggetarian', 'Non-vegetarian'] },
+      activity: { text: 'Roughly how many days a week do you train? A number works too.', chips: ['0', '2', '4', '6'] },
+      days: { text: 'How many days do you want to give it? A number like 90 is fine.', chips: ['60 days', '90 days', '180 days'] },
+    };
+    const retry = retries[next];
+    if (retry) return { ...retry, asking: next };
+  }
   const prompts: Partial<Record<keyof Facts, { text: string; chips?: string[] }>> = {
     age: { text: 'How old are you?' },
     sex: { text: 'And are you male or female? I only need it for the metabolism formula.', chips: ['Male', 'Female'] },
@@ -127,7 +147,7 @@ function askForNext(facts: Facts): Reply {
       ? `Nearly there — I still need ${missing.map((m) => FACT_LABELS[m]).join(', ')}.\n\n`
       : '';
 
-  return { text: acknowledgement + prompt.text, chips: prompt.chips };
+  return { text: acknowledgement + prompt.text, chips: prompt.chips, asking: next };
 }
 
 interface Context {
@@ -135,6 +155,8 @@ interface Context {
   profile: Profile | null;
   /** True on the very first exchange. */
   isFirstMessage: boolean;
+  /** The fact Fitty asked for last turn, if any. */
+  lastAsked?: keyof Facts;
 }
 
 /**
@@ -200,7 +222,7 @@ export function respond(input: string, ctx: Context): Reply {
   const wantsProgress = /\b(on track|progress|how am i|weigh|weight loss so far|check ?in)\b/.test(t);
 
   if (!profile && (wantsFood || wantsTraining || wantsProgress)) {
-    return askForNext(ctx.facts);
+    return askForNext(ctx.facts, ctx.lastAsked);
   }
 
   if (profile) {
@@ -270,7 +292,7 @@ export function respond(input: string, ctx: Context): Reply {
     };
   }
 
-  return askForNext(ctx.facts);
+  return askForNext(ctx.facts, ctx.lastAsked);
 }
 
 function plansafeDelta(profile: Profile): number {

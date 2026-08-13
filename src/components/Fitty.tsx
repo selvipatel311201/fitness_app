@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Profile } from '../types';
-import { extractFacts, type Facts, missingFacts } from '../lib/fitty/facts';
+import { answerFor, extractFacts, type Facts, missingFacts } from '../lib/fitty/facts';
 import { factsToProfile, planSummary, respond } from '../lib/fitty/engine';
 import { BackendError, askFitty, hasBackend, type ChatTurn } from '../lib/fitty/backend';
 
@@ -61,6 +61,8 @@ export function Fitty({ profile, onProfile }: Props) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [facts, setFacts] = useState<Facts>({});
+  /** The fact Fitty last asked for — lets a bare "24" land on the right field. */
+  const [asking, setAsking] = useState<keyof Facts | undefined>(undefined);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -121,7 +123,17 @@ export function Fitty({ profile, onProfile }: Props) {
     setBusy(true);
 
     const learned = extractFacts(text);
-    const merged: Facts = { ...facts, ...learned };
+    const answered = asking ? answerFor(asking, text) : {};
+
+    // A short reply to a direct question must not be re-read as a different
+    // field — "62" answering "target weight?" is not a new current weight.
+    if (Object.keys(answered).length > 0 && text.split(/\s+/).length <= 3) {
+      (Object.keys(learned) as Array<keyof Facts>).forEach((k) => {
+        if (k !== asking) delete learned[k];
+      });
+    }
+
+    const merged: Facts = { ...facts, ...learned, ...answered };
     setFacts(merged);
 
     const wasComplete = missingFacts(facts).length === 0;
@@ -146,11 +158,18 @@ export function Fitty({ profile, onProfile }: Props) {
           setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, offer: built } : msg)));
         }
       } else {
-        const reply = respond(text, { facts: merged, profile: built ?? profile, isFirstMessage: messages.length <= 1 });
+        const reply = respond(text, {
+          facts: merged,
+          profile: built ?? profile,
+          isFirstMessage: messages.length <= 1,
+          lastAsked: asking,
+        });
         // Completing the profile is the moment worth celebrating.
         if (built && nowComplete && !wasComplete) {
+          setAsking(undefined);
           push({ role: 'fitty', text: planSummary(built), chips: ['What should I eat today?', "What's my workout today?"], offer: built });
         } else {
+          setAsking(reply.asking);
           push({ role: 'fitty', ...reply });
         }
       }
@@ -201,7 +220,7 @@ export function Fitty({ profile, onProfile }: Props) {
         </header>
 
         <div className="fitty-log" ref={scroller}>
-          {messages.map((m) => (
+          {messages.map((m, i) => (
             <div key={m.id} className={`fitty-msg fitty-${m.role}`}>
               <div className="fitty-bubble">
                 {m.text ? renderText(m.text) : <span className="fitty-typing" aria-label="Fitty is typing" />}
@@ -220,7 +239,9 @@ export function Fitty({ profile, onProfile }: Props) {
                 </button>
               )}
 
-              {m.chips && m.chips.length > 0 && (
+              {/* Only the newest message keeps its chips. A stale chip answers
+                  whatever question is open now, which strands the conversation. */}
+              {m.chips && m.chips.length > 0 && i === messages.length - 1 && (
                 <div className="fitty-chips">
                   {m.chips.map((chip) => (
                     <button key={chip} className="fitty-chip" onClick={() => void send(chip)} disabled={busy}>
