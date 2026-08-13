@@ -4,6 +4,7 @@ import type { ActivityLevel, DietPreference, FieldErrors, Goal, Profile, Profile
 import { ACTIVITY_LABELS, GOAL_LABELS } from '../lib/calc';
 import { validate } from '../lib/validate';
 import { PhotoUpload } from './PhotoUpload';
+import { Icon } from './Chrome';
 
 interface Props {
   initial: ProfileDraft;
@@ -45,26 +46,33 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
   }
 
   return (
-    <article className="post">
+    <form className="form" onSubmit={handleSubmit} noValidate>
       <header>
-        <div className="title">
-          <h2>Your details</h2>
-          <p>Everything is worked out in this browser and stored on this device.</p>
-        </div>
+        <span className="eyebrow">
+          <Icon name="bolt" size={14} /> Two minutes
+        </span>
+        <h1>Your details</h1>
+        <p className="lede">Everything is worked out in this browser. Nothing is uploaded, photo included.</p>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <h3>Photo</h3>
+      <fieldset className="fieldset">
+        <legend>
+          <span className="legend-num">1</span> Photo (optional)
+        </legend>
         <PhotoUpload photo={draft.photo} onChange={(photo) => set('photo', photo)} />
+      </fieldset>
 
-        <h3>About you</h3>
-        <div className="row gtr-uniform">
-          <div className="col-4 col-12-small">
-            <label htmlFor="name">Name (optional)</label>
+      <fieldset className="fieldset">
+        <legend>
+          <span className="legend-num">2</span> About you
+        </legend>
+        <div className="grid">
+          <label className="field" htmlFor="name">
+            <span>Name (optional)</span>
             <input id="name" type="text" value={draft.name} onChange={(e) => set('name', e.target.value)} placeholder="Selvi" />
-          </div>
-          <div className="col-4 col-6-small">
-            <label htmlFor="age">Age</label>
+          </label>
+          <label className="field" htmlFor="age">
+            <span>Age</span>
             <input
               id="age"
               type="text"
@@ -75,9 +83,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               aria-invalid={Boolean(errors.age)}
             />
             {errors.age && <p className="field-error">{errors.age}</p>}
-          </div>
-          <div className="col-4 col-6-small">
-            <label htmlFor="sex">Sex</label>
+          </label>
+          <label className="field" htmlFor="sex">
+            <span>Sex</span>
             <select id="sex" value={draft.sex} onChange={(e) => set('sex', e.target.value as Sex)}>
               {(Object.keys(SEX_LABELS) as Sex[]).map((k) => (
                 <option key={k} value={k}>
@@ -85,9 +93,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
                 </option>
               ))}
             </select>
-          </div>
-          <div className="col-6 col-12-small">
-            <label htmlFor="height">Height (cm)</label>
+          </label>
+          <label className="field" htmlFor="height">
+            <span>Height (cm)</span>
             <input
               id="height"
               type="text"
@@ -98,9 +106,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               aria-invalid={Boolean(errors.heightCm)}
             />
             {errors.heightCm && <p className="field-error">{errors.heightCm}</p>}
-          </div>
-          <div className="col-6 col-12-small">
-            <label htmlFor="weight">Current weight (kg)</label>
+          </label>
+          <label className="field" htmlFor="weight">
+            <span>Current weight (kg)</span>
             <input
               id="weight"
               type="text"
@@ -111,13 +119,17 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               aria-invalid={Boolean(errors.weightKg)}
             />
             {errors.weightKg && <p className="field-error">{errors.weightKg}</p>}
-          </div>
+          </label>
         </div>
+      </fieldset>
 
-        <h3>Your goal</h3>
-        <div className="row gtr-uniform">
-          <div className="col-4 col-6-small">
-            <label htmlFor="target">Target weight (kg)</label>
+      <fieldset className="fieldset">
+        <legend>
+          <span className="legend-num">3</span> Your goal
+        </legend>
+        <div className="grid">
+          <label className="field" htmlFor="target">
+            <span>Target weight (kg)</span>
             <input
               id="target"
               type="text"
@@ -128,9 +140,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               aria-invalid={Boolean(errors.targetWeightKg)}
             />
             {errors.targetWeightKg && <p className="field-error">{errors.targetWeightKg}</p>}
-          </div>
-          <div className="col-4 col-6-small">
-            <label htmlFor="days">Days to reach it</label>
+          </label>
+          <label className="field" htmlFor="days">
+            <span>Days to reach it</span>
             <input
               id="days"
               type="text"
@@ -141,9 +153,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               aria-invalid={Boolean(errors.days)}
             />
             {errors.days && <p className="field-error">{errors.days}</p>}
-          </div>
-          <div className="col-4 col-12-small">
-            <label htmlFor="goal">Fitness goal</label>
+          </label>
+          <label className="field" htmlFor="goal">
+            <span>Fitness goal</span>
             <select id="goal" value={draft.goal} onChange={(e) => set('goal', e.target.value as Goal)}>
               {(Object.keys(GOAL_LABELS) as Goal[]).map((k) => (
                 <option key={k} value={k}>
@@ -151,9 +163,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
                 </option>
               ))}
             </select>
-          </div>
-          <div className="col-12">
-            <label htmlFor="activity">Activity level</label>
+          </label>
+          <label className="field field-wide" htmlFor="activity">
+            <span>Activity level</span>
             <select
               id="activity"
               value={draft.activity}
@@ -165,13 +177,17 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
                 </option>
               ))}
             </select>
-          </div>
+          </label>
         </div>
+      </fieldset>
 
-        <h3>Food</h3>
-        <div className="row gtr-uniform">
-          <div className="col-6 col-12-small">
-            <label htmlFor="diet">Preference</label>
+      <fieldset className="fieldset">
+        <legend>
+          <span className="legend-num">4</span> Food
+        </legend>
+        <div className="grid">
+          <label className="field" htmlFor="diet">
+            <span>Preference</span>
             <select id="diet" value={draft.diet} onChange={(e) => set('diet', e.target.value as DietPreference)}>
               {(Object.keys(DIET_LABELS) as DietPreference[]).map((k) => (
                 <option key={k} value={k}>
@@ -179,9 +195,9 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
                 </option>
               ))}
             </select>
-          </div>
-          <div className="col-6 col-12-small">
-            <label htmlFor="avoid">Foods to avoid</label>
+          </label>
+          <label className="field" htmlFor="avoid">
+            <span>Foods to avoid</span>
             <input
               id="avoid"
               type="text"
@@ -190,24 +206,21 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
               placeholder="mushroom, peanut"
             />
             <p className="hint">Comma separated.</p>
-          </div>
+          </label>
         </div>
 
-        <ul className="actions">
-          <li>
-            <button type="submit" className="button primary">
-              {submitLabel}
-            </button>
-          </li>
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary">
+            {submitLabel}
+          </button>
           {onCancel && (
-            <li>
-              <button type="button" className="button" onClick={onCancel}>
-                Cancel
-              </button>
-            </li>
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancel
+            </button>
           )}
-        </ul>
-      </form>
-    </article>
+          <span className="hint">You can change any of this later.</span>
+        </div>
+      </fieldset>
+    </form>
   );
 }

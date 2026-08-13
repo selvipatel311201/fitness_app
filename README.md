@@ -19,37 +19,17 @@ attachment, sending the PDF means saving it first and attaching it by hand.
 
 React 19 · TypeScript (strict) · Vite · GitHub Actions → GitHub Pages
 
-## Theme and attribution
+## Design
 
-The site is built on **[Massively](https://html5up.net/massively) by HTML5 UP**,
-used under **CC BY 3.0** — see `MASSIVELY-LICENSE.txt`. The licence requires a
-visible credit, which lives in the page footer as “Design: HTML5 UP”. **Removing
-that credit requires buying a licence from HTML5 UP** — don't delete it casually.
+Custom design system — no template, nothing to attribute. Space Grotesk for
+headings and numbers, Inter for body text (both from Google Fonts). Near-black
+ink on off-white, with one hot accent (`#ff4a1c`) reserved for actions and the
+single most important number on the page; macro colours are the only other hues.
+Tokens live at the top of `src/index.css`.
 
-The template is vendored unmodified in `public/assets/` and `public/images/`, and
-loaded by a plain `<link>` in `index.html` so its own relative URLs (fonts, the
-background photo) keep resolving. App-specific styling lives in `src/index.css`,
-which loads afterwards and only adds what the template has no equivalent for:
-stat tiles, progress and macro bars, the plan notice, and the print stylesheet.
-
-Its palette is the template's: ink `#212931`, muted `#717981`, accent `#18bfef`,
-hairline `#e2e2e2`. Note `#main` is white while everything outside it sits on the
-dark background photo — styling added there must be dark-on-light.
-
-## Running locally
-
-```bash
-npm install
-npm run dev      # http://localhost:5173
-```
-
-Other scripts:
-
-```bash
-npm run build      # typecheck + production build into dist/
-npm run preview    # serve the built dist/ locally
-npm run typecheck  # types only
-```
+The hero photograph in `public/images/` is CC0 (public domain) from StockSnap via
+Openverse, so it carries no attribution requirement. It sits behind a heavy
+gradient — swap it by replacing `public/images/hero.jpg`.
 
 ## Running with Docker
 

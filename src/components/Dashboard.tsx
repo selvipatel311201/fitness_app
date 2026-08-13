@@ -3,6 +3,7 @@ import { GOAL_LABELS, buildPlan, todayIso } from '../lib/calc';
 import { buildMeals, dietNotes } from '../lib/mealPlan';
 import { buildTrainingWeek } from '../lib/trainingPlan';
 import { buildMailtoHref, planFileName } from '../lib/planText';
+import { Icon } from './Chrome';
 
 interface Props {
   profile: Profile;
@@ -18,10 +19,10 @@ function formatDate(iso: string): string {
   });
 }
 
-const NOTICE_TITLES = {
-  ok: 'On track',
-  aggressive: 'Ambitious pace',
-  unrealistic: 'Timeline adjusted',
+const NOTICE = {
+  ok: { title: 'On track', icon: '✓' },
+  aggressive: { title: 'Ambitious pace', icon: '!' },
+  unrealistic: { title: 'Timeline adjusted', icon: '!' },
 } as const;
 
 export function Dashboard({ profile, onEdit, onReset }: Props) {
@@ -54,11 +55,12 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
     window.print();
   }
 
-  const tiles: Array<{ label: string; value: string; note: string }> = [
+  const tiles = [
     {
       label: 'Daily calories',
       value: plan.dailyCalories.toLocaleString(),
       note: 'kcal per day',
+      hero: true,
     },
     {
       label: plan.adjustment < 0 ? 'Deficit' : plan.adjustment > 0 ? 'Surplus' : 'Balance',
@@ -82,6 +84,8 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
     { label: 'Steps', value: plan.stepsTarget.toLocaleString(), note: 'outside your workouts' },
   ];
 
+  const notice = NOTICE[plan.safety.level];
+
   return (
     <>
       <div className="print-head">
@@ -91,22 +95,27 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
         </span>
       </div>
 
-      <article className="post featured plan-hero">
-        <header className="major">
-          <span className="date">{GOAL_LABELS[profile.goal]}</span>
-          <h2>{profile.name ? `${profile.name}'s plan` : 'Your plan'}</h2>
-          <p>
-            {Math.abs(plan.weightDeltaKg)} kg {direction} · {profile.weightKg} kg today ·{' '}
-            {clamped ? 'realistic finish ' : 'target '}
-            {formatDate(clamped ? plan.projectedDate : plan.targetDate)}
-          </p>
-        </header>
-
-        {profile.photo && (
-          <span className="image main plan-photo">
-            <img src={profile.photo} alt="Your progress photo" />
-          </span>
-        )}
+      <section className="plan-hero">
+        <div className="plan-hero-top">
+          {profile.photo && <img className="plan-avatar" src={profile.photo} alt="Your progress photo" />}
+          <div>
+            <span className="eyebrow">{GOAL_LABELS[profile.goal]}</span>
+            <h1>{profile.name ? `${profile.name}'s plan` : 'Your plan'}</h1>
+            <p className="plan-sub">
+              {Math.abs(plan.weightDeltaKg)} kg {direction} · {profile.weightKg} kg today ·{' '}
+              {clamped ? 'realistic finish ' : 'target '}
+              {formatDate(clamped ? plan.projectedDate : plan.targetDate)}
+            </p>
+          </div>
+          <div className="plan-hero-actions">
+            <button className="btn btn-ghost btn-sm" onClick={onEdit}>
+              Edit details
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={handlePrint}>
+              <Icon name="download" size={15} /> Save PDF
+            </button>
+          </div>
+        </div>
 
         <div className="progress">
           <div className="progress-bar" style={{ width: `${progressPct}%` }} />
@@ -117,41 +126,42 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
           </span>
           <span>{plan.daysLeft} days left</span>
         </p>
+      </section>
 
-        <div className={`notice notice-${plan.safety.level}`}>
-          <strong>{NOTICE_TITLES[plan.safety.level]}</strong>
-          <span>{plan.safety.message}</span>
+      <div className={`notice notice-${plan.safety.level}`}>
+        <span className="notice-icon">{notice.icon}</span>
+        <div>
+          <strong>{notice.title}</strong>
+          <p>{plan.safety.message}</p>
         </div>
-      </article>
+      </div>
 
-      <section className="posts stat-posts">
+      <div className="stat-grid">
         {tiles.map((tile) => (
-          <article key={tile.label} className="stat">
-            <span className="date">{tile.label}</span>
-            <strong className="stat-value">{tile.value}</strong>
+          <article key={tile.label} className={`stat${tile.hero ? ' stat-hero' : ''}`}>
+            <span className="stat-label">{tile.label}</span>
+            <span className="stat-value">{tile.value}</span>
             <span className="stat-note">{tile.note}</span>
           </article>
         ))}
-      </section>
+      </div>
 
-      <article className="post">
-        <header>
-          <div className="title">
-            <h2>Macros</h2>
-            <p>
-              {plan.macros.proteinG}g protein · {plan.macros.carbsG}g carbs · {plan.macros.fatG}g fat
-            </p>
+      <div className="two-col">
+        <section className="card">
+          <div className="card-head">
+            <h3>Macros</h3>
+            <span className="card-note">Every day, in grams</span>
           </div>
-        </header>
-        <Macro label="Protein" grams={plan.macros.proteinG} kcal={plan.macros.proteinG * 4} total={plan.dailyCalories} />
-        <Macro label="Carbs" grams={plan.macros.carbsG} kcal={plan.macros.carbsG * 4} total={plan.dailyCalories} />
-        <Macro label="Fat" grams={plan.macros.fatG} kcal={plan.macros.fatG * 9} total={plan.dailyCalories} />
-      </article>
+          <Macro label="Protein" grams={plan.macros.proteinG} kcal={plan.macros.proteinG * 4} total={plan.dailyCalories} />
+          <Macro label="Carbs" grams={plan.macros.carbsG} kcal={plan.macros.carbsG * 4} total={plan.dailyCalories} />
+          <Macro label="Fat" grams={plan.macros.fatG} kcal={plan.macros.fatG * 9} total={plan.dailyCalories} />
+        </section>
 
-      <section className="posts">
-        <article>
-          <h3>Meal plan</h3>
-          <p className="muted">Built around your {profile.diet.replace('-', ' ')} preference.</p>
+        <section className="card">
+          <div className="card-head">
+            <h3>Meal plan</h3>
+            <span className="card-note">{profile.diet.replace('-', ' ')}</span>
+          </div>
           <ul className="rows">
             {meals.map((meal) => (
               <li key={meal.name}>
@@ -164,14 +174,18 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
               </li>
             ))}
           </ul>
-        </article>
+        </section>
+      </div>
 
-        <article>
-          <h3>Training week</h3>
-          <p className="muted">Repeat weekly, adding a little weight or distance each time.</p>
+      <div className="two-col">
+        <section className="card">
+          <div className="card-head">
+            <h3>Training week</h3>
+            <span className="card-note">Repeat weekly, add a little each time</span>
+          </div>
           <ul className="rows">
             {week.map((day) => (
-              <li key={day.day}>
+              <li key={day.day} className={day.focus === 'Rest' ? 'day-rest' : undefined}>
                 <div className="row-head">
                   <span className="day-tag">{day.day}</span>
                   <strong>{day.focus}</strong>
@@ -180,81 +194,73 @@ export function Dashboard({ profile, onEdit, onReset }: Props) {
               </li>
             ))}
           </ul>
-        </article>
-      </section>
+        </section>
 
-      <article className="post">
-        <header>
-          <div className="title">
-            <h2>Checkpoints</h2>
-            <p>Weigh in once a week, same time of day.</p>
+        <section className="card">
+          <div className="card-head">
+            <h3>Checkpoints</h3>
+            <span className="card-note">Weigh in weekly, same time of day</span>
           </div>
-        </header>
-        <div className="table-wrapper">
-          <table className="alt">
-            <thead>
-              <tr>
-                <th>Week</th>
-                <th>Target weight</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plan.milestones.map((m) => (
-                <tr key={m.week}>
-                  <td>{m.week}</td>
-                  <td>{m.targetWeightKg} kg</td>
-                  <td>{formatDate(m.date)}</td>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Week</th>
+                  <th>Target</th>
+                  <th>Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </article>
-
-      <article className="post">
-        <header>
-          <div className="title">
-            <h2>Habits</h2>
-            <p>The part that decides the outcome.</p>
+              </thead>
+              <tbody>
+                {plan.milestones.map((m) => (
+                  <tr key={m.week}>
+                    <td>{m.week}</td>
+                    <td className="num">{m.targetWeightKg} kg</td>
+                    <td>{formatDate(m.date)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </header>
+        </section>
+      </div>
+
+      <section className="card">
+        <div className="card-head">
+          <h3>Habits that decide the outcome</h3>
+          <span className="card-note">The unglamorous part that actually works</span>
+        </div>
         <ul className="habits">
-          {notes.map((note, i) => (
+          {notes.map((note) => (
             <li key={note}>
-              <span className="habit-index">{String(i + 1).padStart(2, '0')}</span>
+              <span className="habit-check">
+                <Icon name="check" size={12} />
+              </span>
               <span>{note}</span>
             </li>
           ))}
         </ul>
+      </section>
 
-        <ul className="actions plan-actions">
-          <li>
-            <button className="button primary icon solid fa-file-pdf" onClick={handlePrint}>
-              Save as PDF
-            </button>
-          </li>
-          <li>
-            <a className="button icon solid fa-envelope" href={mailtoHref}>
-              Email my plan
-            </a>
-          </li>
-          <li>
-            <button className="button" onClick={onEdit}>
-              Edit details
-            </button>
-          </li>
-          <li>
-            <button className="button" onClick={onReset}>
-              Start over
-            </button>
-          </li>
-        </ul>
-        <p className="hint plan-actions-hint">
-          “Save as PDF” opens your browser’s print dialog — choose <em>Save as PDF</em> as the destination. “Email my
-          plan” opens your mail app with the plan written into the message; nothing is sent from this page.
-        </p>
-      </article>
+      <div className="plan-actions">
+        <button className="btn btn-primary" onClick={handlePrint}>
+          <Icon name="download" size={16} /> Save as PDF
+        </button>
+        <a className="btn btn-ghost" href={mailtoHref}>
+          <Icon name="mail" size={16} /> Email my plan
+        </a>
+        <button className="btn btn-ghost" onClick={onEdit}>
+          Edit details
+        </button>
+        <button className="btn btn-quiet" onClick={onReset}>
+          Start over
+        </button>
+      </div>
+
+      <p className="disclaimer plan-actions-hint">
+        “Save as PDF” opens your browser’s print dialog — choose <em>Save as PDF</em> as the destination. “Email my
+        plan” opens your mail app with the plan written in; nothing is sent from this page. Numbers come from standard
+        estimates (Mifflin-St Jeor, 7,700 kcal per kg) and are a starting point, not medical advice.
+      </p>
     </>
   );
 }
@@ -266,7 +272,7 @@ function Macro({ label, grams, kcal, total }: { label: string; grams: number; kc
       <div className="macro-head">
         <strong>{label}</strong>
         <span>
-          {grams} g · {pct}% of calories
+          {grams} g · {pct}%
         </span>
       </div>
       <div className="macro-bar">

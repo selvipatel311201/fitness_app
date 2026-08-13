@@ -45,11 +45,11 @@ export function PhotoUpload({ photo, onChange }: Props) {
             e.target.value = '';
           }}
         />
-        <button type="button" className="btn btn-small" disabled={busy} onClick={() => inputRef.current?.click()}>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => inputRef.current?.click()}>
           {busy ? 'Loading…' : photo ? 'Change photo' : 'Upload photo'}
         </button>
         {photo && (
-          <button type="button" className="btn btn-small btn-quiet" onClick={() => onChange(null)}>
+          <button type="button" className="btn btn-quiet btn-sm" onClick={() => onChange(null)}>
             Remove
           </button>
         )}

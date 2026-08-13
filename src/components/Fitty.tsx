@@ -111,6 +111,13 @@ export function Fitty({ profile, onProfile }: Props) {
     }
   }, [messages, open]);
 
+  // The hero CTA opens the panel from outside this component.
+  useEffect(() => {
+    const open = () => setOpen(true);
+    window.addEventListener('fitty:open', open);
+    return () => window.removeEventListener('fitty:open', open);
+  }, []);
+
   // Escape closes the panel, matching every other chat widget on the web.
   useEffect(() => {
     if (!open) return;
