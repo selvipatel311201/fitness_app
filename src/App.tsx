@@ -8,21 +8,25 @@ import { Counter, Reveal } from './components/Reveal';
 import { clearProfile, loadProfile, saveProfile } from './lib/storage';
 import { draftFromProfile, emptyDraft } from './lib/validate';
 
+const PROMOS = [
+  'Free forever · No account · Nothing leaves your device',
+  'Your plan in two minutes — calories, meals and a training week',
+  'Every movement explained in plain steps, with videos',
+];
+
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
   const [editing, setEditing] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [promo, setPromo] = useState(0);
 
   useEffect(() => {
     if (profile) saveProfile(profile);
   }, [profile]);
 
-  // The header sits transparent over the hero and turns solid past it.
+  // The promo bar cycles its messages, the way a storefront rotates offers.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const id = setInterval(() => setPromo((n) => (n + 1) % PROMOS.length), 5000);
+    return () => clearInterval(id);
   }, []);
 
   // Submitting from the bottom of a long form would otherwise drop you into the
@@ -47,12 +51,15 @@ export default function App() {
 
   return (
     <>
-      <header className={`site-header${!profile ? ' over-hero' : ''}${scrolled ? ' is-solid' : ''}`}>
+      <div className="promo-bar">
+        <span key={promo}>
+          {PROMOS[promo]}{' '}
+          <button onClick={() => window.dispatchEvent(new Event('fitty:open'))}>Ask Fitty</button>
+        </span>
+      </div>
+
+      <header className="site-header">
         <div className="shell header-inner">
-          <a className="brand" href="#top">
-            <Logo />
-            FitPlan
-          </a>
           <nav className="header-nav">
             <button
               className={`header-link${showForm ? ' is-active' : ''}`}
@@ -65,30 +72,50 @@ export default function App() {
                 Your plan
               </button>
             )}
+            <a className="header-link" href="#how">
+              How it works
+            </a>
           </nav>
+
+          <a className="brand" href="#top">
+            <Logo />
+            FitPlan
+          </a>
+
+          <div className="header-tools">
+            <button className="icon-button" aria-label="Ask Fitty" onClick={() => window.dispatchEvent(new Event('fitty:open'))}>
+              <Icon name="chat" size={20} />
+            </button>
+          </div>
         </div>
       </header>
+
+      <div className="ask-bar">
+        <div className="shell">
+          <button onClick={() => window.dispatchEvent(new Event('fitty:open'))}>
+            <Icon name="chat" size={18} /> Ask Fitty anything — "how do I do a squat?", "what should I eat today?"
+          </button>
+        </div>
+      </div>
 
       <main id="top">
         {!profile && (
           <>
             <section className="hero">
               <div className="shell hero-grid">
-                <span className="eyebrow">
-                  <Icon name="bolt" size={14} /> Free · no account · private
-                </span>
-                <h1>Your body. Your goal. A plan that fits.</h1>
+                <span className="eyebrow">Free · no account</span>
+                <h1>Your plan, in two minutes</h1>
                 <p className="lede">
-                  Tell FitPlan your numbers and it works out exactly what to eat and how to train — calories, macros,
-                  meals and a weekly split, built around the time you actually have.
+                  Tell us your numbers and we work out exactly what to eat and how to train — calories, macros, meals
+                  and a weekly split built around the time you actually have.
                 </p>
                 <div className="hero-cta">
-                  <a className="btn btn-primary" href="#form">
-                    Build my plan <Icon name="bolt" size={16} />
+                  <a className="btn btn-ghost" href="#form">
+                    Build my plan
                   </a>
-                  <button className="btn btn-ghost" onClick={() => window.dispatchEvent(new Event('fitty:open'))}>
-                    <Icon name="chat" size={16} /> Ask Fitty instead
-                  </button>
+                  <a className="btn btn-quiet" href="#how">
+                    How it works
+                  </a>
                 </div>
                 <ul className="hero-points">
                   <li>
@@ -109,7 +136,29 @@ export default function App() {
               </a>
             </section>
 
-            <section className="band" id="what">
+            <section className="band band-light" id="departments" style={{ paddingBottom: 0 }}>
+              <div className="shell">
+                <ul className="tiles">
+                  {[
+                    ['flame', 'Eat', 'A calorie target and macro split, with four meals a day that match how you eat.'],
+                    ['calendar', 'Train', 'A seven-day split scaled to the days you can realistically get to.'],
+                    ['chat', 'Ask', 'Fitty explains any movement in plain steps, with videos worth watching.'],
+                  ].map(([icon, title, body], i) => (
+                    <Reveal as="li" key={title} delay={i * 80}>
+                      <div className="tile-card">
+                        <span className="icon-badge">
+                          <Icon name={icon} size={20} />
+                        </span>
+                        <h3>{title}</h3>
+                        <p>{body}</p>
+                      </div>
+                    </Reveal>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
+            <section className="band band-alt" id="what">
               <div className="shell">
                 <Reveal>
                   <div className="band-head">
