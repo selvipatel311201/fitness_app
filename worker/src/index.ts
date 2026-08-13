@@ -8,7 +8,9 @@
 
 export interface Env {
   /** Set with: npx wrangler secret put GROQ_API_KEY */
-  GROQ_API_KEY: string;
+  GROQ_API_KEY?: string;
+  /** Tolerated alias — the dashboard dialog makes a trailing "1" easy to add. */
+  GROQ_API_KEY1?: string;
   /** Comma-separated list of sites allowed to call this Worker. */
   ALLOWED_ORIGINS?: string;
   /** Optional model override without redeploying code. */
@@ -91,7 +93,8 @@ export default {
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.method !== 'POST') return new Response('POST only', { status: 405, headers: cors });
-    if (!env.GROQ_API_KEY) return json({ error: 'Coach is not configured yet (missing GROQ_API_KEY).' }, 500);
+    const apiKey = env.GROQ_API_KEY || env.GROQ_API_KEY1;
+    if (!apiKey) return json({ error: 'Coach is not configured yet (missing GROQ_API_KEY).' }, 500);
 
     const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
     if (rateLimited(ip)) return json({ error: "I'm getting a lot of messages right now — try again in a minute." }, 429);
@@ -125,7 +128,7 @@ export default {
       upstream = await fetch(GROQ_URL, {
         method: 'POST',
         headers: {
-          authorization: `Bearer ${env.GROQ_API_KEY}`,
+          authorization: `Bearer ${apiKey}`,
           'content-type': 'application/json',
         },
         body: JSON.stringify({
