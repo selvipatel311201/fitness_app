@@ -2,7 +2,8 @@ import type { Profile } from '../../types';
 import { GOAL_LABELS, buildPlan, todayIso } from '../calc';
 import { buildMeals } from '../mealPlan';
 import { buildTrainingWeek } from '../trainingPlan';
-import { EXERCISES, findExercise, suggestExercises, youTubeLinks } from './exercises';
+import { EXERCISES, findExercise, findGroup, suggestExercises, youTubeLinks } from './exercises';
+import { normalizeTypos } from './text';
 import { FACT_LABELS, type Facts, missingFacts } from './facts';
 
 export interface Reply {
@@ -101,6 +102,33 @@ function exerciseAnswer(text: string): Reply | null {
   };
 }
 
+/** Answers "leg exercise" and friends: the best movement in full, then options. */
+function groupAnswer(text: string): Reply | null {
+  const match = findGroup(text);
+  if (!match) return null;
+  const [lead, ...rest] = match.exercises;
+  return {
+    text: [
+      // "the squat" reads fine; "the running" does not.
+      `For **${match.group.label}**, start with ${/ing$/.test(lead.name) ? '' : 'the '}${lead.name.toLowerCase()} — it works your ${lead.targets}.`,
+      '',
+      ...lead.steps.map((s, i) => `${i + 1}. ${s}`),
+      '',
+      `⚠️ Watch out: ${lead.watchOut}`,
+      `Start with: ${lead.starter}`,
+      `• [Watch: ${lead.name} form tutorial](${youTubeLinks(lead)[0].url})`,
+      `• [Watch: ${lead.name} common mistakes](${youTubeLinks(lead)[1].url})`,
+      '',
+      rest.length > 0 ? `Also worth learning for ${match.group.label}:` : '',
+      ...rest.map((e) => `• **${e.name}** — ${e.starter} [Watch](${youTubeLinks(e)[0].url})`),
+    ]
+      .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
+      .join('\n'),
+    chips: rest.length > 0 ? [`How do I do a ${rest[0].name.toLowerCase()}?`, 'Show me more exercises'] : ['Show me more exercises'],
+    showed: match.exercises.map((e) => e.name),
+  };
+}
+
 /** Several movements at once, each with its own video. */
 function exerciseRoundup(goal: string | undefined, exclude: string[] = [], count = 3): Reply {
   const picks = suggestExercises(goal, count, exclude);
@@ -190,7 +218,9 @@ interface Context {
  * no network, which is what lets the page keep its no-upload promise.
  */
 export function respond(input: string, ctx: Context): Reply {
-  const text = input.trim();
+  // Repair near-miss spellings first: "leg excerice" must reach the same
+  // branches as "leg exercise".
+  const text = normalizeTypos(input.trim());
   const t = text.toLowerCase();
   const profile = ctx.profile;
 
@@ -231,15 +261,27 @@ export function respond(input: string, ctx: Context): Reply {
     if (answer) return answer;
   }
 
+  // A body part — "leg exercise", "ab workout", "something for my back".
+  const groupReply = groupAnswer(text);
+  if (groupReply && /\b(exercise|exercises|workout|workouts|move|moves|movement|train|training|how|what|which|best|good|routine|day|stretch|video|link|something|anything|help|need|want|give|show|suggest|recommend|tips?|for my|strengthen|tone|build)\b/.test(t)) {
+    return groupReply;
+  }
+
   // Asking for videos, links, or exercises in general — hand over several.
   if (/\b(videos?|youtube|links?|clips?|tutorials?)\b/.test(t) || /\b(more|other|another|different|some|few|list of|examples? of)\b.*\b(exercises?|workouts?|moves?|movements?)\b/.test(t) || /\b(exercises?|moves?)\b.*\b(list|examples?|ideas?|suggest)/.test(t)) {
     return exerciseRoundup(profile?.goal ?? ctx.facts.goal, ctx.shown ?? []);
   }
 
-  if (/\b(how (do|to|should)|form|technique)\b/.test(t) && /\bexercise\b|\bmove\b/.test(t)) {
+  // Only for genuine "how do I perform X" questions. Matching a bare
+  // "workout" here would swallow "what's my workout today?".
+  if (/\b(how (do|to|should|can)|form|technique|proper way|teach me|show me how)\b/.test(t)) {
     return {
-      text: `I don't know that one yet. I can walk you through ${EXERCISES.map((e) => e.name.toLowerCase()).join(', ')}.`,
-      chips: ['How do I do a squat?', 'Show me more exercises'],
+      text: [
+        `I don't know that exact one, but I can walk you through any of these: ${EXERCISES.map((e) => e.name.toLowerCase()).join(', ')}.`,
+        '',
+        'You can also ask by body part — legs, chest, back, core, arms or cardio.',
+      ].join('\n'),
+      chips: ['Leg exercises', 'Core exercises', 'How do I do a squat?'],
     };
   }
 

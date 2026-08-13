@@ -1,3 +1,5 @@
+import { fuzzyIncludes } from './text';
+
 export interface Exercise {
   name: string;
   /** Words a user might type for this movement. */
@@ -233,5 +235,77 @@ export function findExercise(text: string): Exercise | null {
       }
     }
   }
-  return best ? best.exercise : null;
+  if (best) return best.exercise;
+
+  // Nothing matched exactly — allow one typo, so "sqaut" still lands.
+  for (const exercise of EXERCISES) {
+    for (const alias of exercise.aliases) {
+      if (alias.length >= 5 && fuzzyIncludes(t, alias)) return exercise;
+    }
+  }
+  return null;
+}
+
+export interface MuscleGroup {
+  label: string;
+  aliases: string[];
+  /** Exercise names, best first. */
+  names: string[];
+}
+
+/** People ask by body part far more often than by movement name. */
+export const GROUPS: MuscleGroup[] = [
+  {
+    label: 'legs',
+    aliases: ['leg', 'legs', 'leg day', 'lower body', 'quad', 'quads', 'hamstring', 'hamstrings', 'thigh', 'thighs', 'glute', 'glutes', 'butt', 'bum', 'calf', 'calves'],
+    names: ['Squat', 'Lunge', 'Hip thrust'],
+  },
+  {
+    label: 'chest',
+    aliases: ['chest', 'pec', 'pecs', 'push day', 'bench', 'upper body'],
+    names: ['Push-up', 'Overhead press', 'Row'],
+  },
+  {
+    label: 'back',
+    aliases: ['back', 'lat', 'lats', 'pull day', 'posture'],
+    names: ['Row', 'Pull-up', 'Deadlift'],
+  },
+  {
+    label: 'core',
+    aliases: ['core', 'abs', 'ab', 'six pack', 'sixpack', 'stomach', 'belly', 'tummy', 'midsection', 'waist'],
+    names: ['Plank', 'Burpee', 'Squat'],
+  },
+  {
+    label: 'arms and shoulders',
+    aliases: ['arm', 'arms', 'bicep', 'biceps', 'tricep', 'triceps', 'shoulder', 'shoulders', 'delts'],
+    names: ['Bicep curl', 'Overhead press', 'Push-up'],
+  },
+  {
+    label: 'cardio',
+    aliases: ['cardio', 'conditioning', 'stamina', 'endurance', 'hiit', 'fat burning', 'fat burn'],
+    names: ['Running', 'Burpee', 'Lunge'],
+  },
+  {
+    label: 'full body',
+    aliases: ['full body', 'whole body', 'total body', 'all over', 'everything'],
+    names: ['Squat', 'Push-up', 'Plank'],
+  },
+];
+
+export function findGroup(text: string): { group: MuscleGroup; exercises: Exercise[] } | null {
+  const t = ` ${text.toLowerCase().replace(/[^a-z\s]/g, ' ')} `;
+  let best: { group: MuscleGroup; length: number } | null = null;
+  for (const group of GROUPS) {
+    for (const alias of group.aliases) {
+      // Space-padded so "ab" doesn't match inside "about".
+      if (t.includes(` ${alias} `) && (!best || alias.length > best.length)) {
+        best = { group, length: alias.length };
+      }
+    }
+  }
+  if (!best) return null;
+  const exercises = best.group.names
+    .map((name) => EXERCISES.find((e) => e.name === name))
+    .filter((e): e is Exercise => Boolean(e));
+  return exercises.length > 0 ? { group: best.group, exercises } : null;
 }
