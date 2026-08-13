@@ -72,36 +72,27 @@ publishes to GitHub Pages. One-time setup:
 `vite.config.ts` sets `base: './'`, so the build works at any path — a project
 site (`user.github.io/repo/`), a user site, or a custom domain — with no change.
 
-### Later: custom domain (selvipatel.com)
+### Custom domain: fit.selvipatel.com
 
-The site starts out on its `github.io` URL. To move it to the domain, do the DNS
-setup below **first**, then add the domain to the repo:
+Live at <https://fit.selvipatel.com>. Two pieces make that work:
 
-```bash
-mkdir -p public && echo 'selvipatel.com' > public/CNAME
-```
+1. **DNS** — a single `CNAME` at Porkbun: host `fit`, answer
+   `selvipatel311201.github.io`, TTL 600. The domain also carries a wildcard
+   `*.selvipatel.com` pointing at Porkbun's parking page; the explicit `fit`
+   record takes precedence over it, so both can coexist.
+2. **`public/CNAME`** — holds `fit.selvipatel.com`. Vite copies `public/` into
+   `dist/` verbatim, so the file ships with every build. Without it Pages clears
+   the custom domain on each deploy, which is the usual cause of a custom domain
+   that "keeps disconnecting".
 
-That file ships in every build, which is what keeps Pages from resetting the
-custom domain on each deploy. Add it before DNS resolves and the site is
-unreachable at both URLs, so leave it out until the records are live.
+Don't add `public/CNAME` before the DNS record resolves — Pages will redirect the
+`github.io` URL to a domain that doesn't answer yet, taking the site offline at
+both addresses.
 
-At your DNS provider:
-
-1. **Apex** (`selvipatel.com`) — four `A` records:
-   ```
-   185.199.108.153
-   185.199.109.153
-   185.199.110.153
-   185.199.111.153
-   ```
-   Add the matching `AAAA` records if your provider supports IPv6:
-   `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`,
-   `2606:50c0:8003::153`.
-2. **www** — a `CNAME` record pointing to `selvipatel311201.github.io`.
-
-Then in **Settings → Pages → Custom domain** enter `selvipatel.com`, wait for the
-DNS check to pass, and tick **Enforce HTTPS** (the certificate can take up to an
-hour). DNS propagation is usually minutes but can take up to 24 hours.
+To move to a different host, change `public/CNAME`, add the matching DNS record,
+and update the domain in **Settings → Pages**. For an apex domain (`selvipatel.com`)
+DNS needs four `A` records instead — `185.199.108.153` through `185.199.111.153`
+— since a CNAME cannot coexist with the domain's `MX` and `TXT` records.
 
 If you'd rather keep `selvipatel.com` for something else and put this on a
 subdomain like `fit.selvipatel.com`, change `public/CNAME` to that hostname and
