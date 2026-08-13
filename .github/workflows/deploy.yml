@@ -30,6 +30,11 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+        env:
+          # Optional: set this repository variable to the deployed Fitty Worker
+          # URL to switch the chatbot from its built-in coach to Claude.
+          # Settings → Secrets and variables → Actions → Variables.
+          VITE_FITTY_API: ${{ vars.VITE_FITTY_API }}
 
       - uses: actions/configure-pages@v5
 

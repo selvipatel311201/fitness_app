@@ -1,0 +1,9 @@
+name = "fitty"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Sites allowed to call this Worker. The API key is NOT here — it is a secret:
+#   npx wrangler secret put ANTHROPIC_API_KEY
+ALLOWED_ORIGINS = "https://fit.selvipatel.com,http://localhost:5173,http://localhost:4173"

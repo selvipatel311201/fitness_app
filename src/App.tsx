@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Profile } from './types';
 import { ProfileForm } from './components/ProfileForm';
 import { Dashboard } from './components/Dashboard';
+import { Fitty } from './components/Fitty';
 import { clearProfile, loadProfile, saveProfile } from './lib/storage';
 import { draftFromProfile, emptyDraft } from './lib/validate';
 
@@ -133,6 +134,8 @@ export default function App() {
           &copy; FitPlan. Design: <a href="https://html5up.net">HTML5 UP</a>.
         </p>
       </footer>
+
+      <Fitty profile={profile} onProfile={handleSubmit} />
     </div>
   );
 }

@@ -9,3 +9,9 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Worker deps and local env
+worker/node_modules
+worker/.wrangler
+.env.local
+.env.production
