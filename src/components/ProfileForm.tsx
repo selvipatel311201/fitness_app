@@ -4,7 +4,6 @@ import type { ActivityLevel, DietPreference, FieldErrors, Goal, Profile, Profile
 import { ACTIVITY_LABELS, GOAL_LABELS } from '../lib/calc';
 import { validate } from '../lib/validate';
 import { PhotoUpload } from './PhotoUpload';
-import { Icon } from './Chrome';
 
 interface Props {
   initial: ProfileDraft;
@@ -47,14 +46,6 @@ export function ProfileForm({ initial, submitLabel, onSubmit, onCancel }: Props)
 
   return (
     <form className="form" onSubmit={handleSubmit} noValidate>
-      <header>
-        <span className="eyebrow">
-          <Icon name="bolt" size={14} /> Two minutes
-        </span>
-        <h1>Your details</h1>
-        <p className="lede">Everything is worked out in this browser. Nothing is uploaded, photo included.</p>
-      </header>
-
       <fieldset className="fieldset">
         <legend>
           <span className="legend-num">1</span> Photo (optional)
