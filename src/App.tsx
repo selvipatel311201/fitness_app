@@ -99,7 +99,7 @@ export default function App() {
       <div className="ask-bar">
         <div className="shell">
           <button onClick={() => window.dispatchEvent(new Event('fitty:open'))}>
-            <Icon name="chat" size={18} /> ASK FITTY — “how do I do a squat?” · “what should I eat today?”
+            <Icon name="chat" size={17} /> Ask Fitty — “how do I do a squat?” · “what should I eat today?”
           </button>
         </div>
       </div>
